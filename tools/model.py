@@ -70,6 +70,9 @@ class Model(nn.Module):
             targets.append(test_y.cpu().detach().numpy())
             testlosses.append(self.hyperparams.criterion(out, test_y.to(DEVICE)).item())
         return outputs, targets, testlosses
+    
+    def save(self, model_file):
+        torch.save(self, model_file)
 
 class MLP(Model):
     def __init__(self, *args, **kwargs) -> None:
