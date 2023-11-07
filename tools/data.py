@@ -50,7 +50,7 @@ class DataHandler():
     def get_test_data(self):
         test_x1 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.samples)
         test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.samples)
-        test_x1_mesh, test_x2_mesh = torch.meshgrid(test_x1, test_x2)
+        test_x1_mesh, test_x2_mesh = torch.meshgrid(test_x1, test_x2, indexing='ij')
         test_x1 = test_x1_mesh.flatten().unsqueeze(1)
         test_x2 = test_x2_mesh.flatten().unsqueeze(1)
         test_x = torch.cat((test_x1, test_x2), dim=1)

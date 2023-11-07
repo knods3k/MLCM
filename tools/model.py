@@ -83,7 +83,7 @@ class MLP(Model):
         self.n_layers = self.hyperparams.n_layers
 
         self.layers = nn.ModuleList()
-        self.activation = nn.ReLU()
+        self.activation = self.hyperparams.activation
 
         self.layers.append(nn.Linear(self.input_dim, self.hidden_dim))
         self.layers.append(self.activation)
