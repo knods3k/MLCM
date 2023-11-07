@@ -18,18 +18,20 @@ class DataHandler():
         self.sample_min = sample_min
         self.sample_max = sample_max
         self.function = function
+        self.snr = snr
         self.batchsize = batchsize
 
 
-    def noise(self, input_tensor, snr=.1):
-        snr *= torch.max(input_tensor)
-        return torch.normal(torch.zeros_like(input_tensor), torch.zeros_like(input_tensor)+(snr**2))
+    def noise(self, input_tensor):
+        self.snr *= torch.max(input_tensor)
+        return torch.normal(torch.zeros_like(input_tensor),\
+                             torch.zeros_like(input_tensor)+(self.snr**2))
 
 
     def get_mesh(self):
         test_x1 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.samples)
         test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.samples)
-        return torch.meshgrid(test_x1, test_x2) 
+        return torch.meshgrid(test_x1, test_x2, indexing='ij') 
 
 
     def get_training_data(self):
