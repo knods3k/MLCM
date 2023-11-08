@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tools.data import sin
 from tools.settings import DEVICE
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error, f1_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 
 def eval_and_plot(model, data_handler):
         """
-        Evaluates the model and plots the results. Evaluation metrics are RMSE, MSE, MAE, R2, MAPE, F1.
+        Evaluates the model and plots the results. Evaluation metrics are RMSE, MSE, MAE, R2, MAPE.
         :param model:
         :param data_handler:
         :return: evaluation metrics
@@ -29,9 +29,8 @@ def eval_and_plot(model, data_handler):
         print(f"R2: {r2}")
         mape = mean_absolute_percentage_error(test_y, net_outputs_test)
         print(f"MAPE: {mape}")
-        f1 = f1_score(test_y, net_outputs_test)
 
-        eval_metrics = {"RMSE": rmse, "MSE": mse, "MAE": mae, "R2": r2, "MAPE": mape, "F1": f1}
+        eval_metrics = {"RMSE": rmse, "MSE": mse, "MAE": mae, "R2": r2, "MAPE": mape}
 
         plt.figure(figsize=(16,9))
         ax = plt.subplot(111, projection='3d')
