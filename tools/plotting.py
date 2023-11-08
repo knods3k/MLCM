@@ -4,11 +4,12 @@ from tools.data import sin
 from tools.settings import DEVICE
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 
-def eval_and_plot(model, data_handler):
+def eval_and_plot(model, data_handler, plot_title=""):
         """
         Evaluates the model and plots the results. Evaluation metrics are RMSE, MSE, MAE, R2, MAPE.
         :param model:
         :param data_handler:
+        :param plot_title:
         :return: evaluation metrics
         """
         test_x1_mesh, test_x2_mesh = data_handler.get_mesh()
@@ -49,6 +50,8 @@ def eval_and_plot(model, data_handler):
         ## All plotting is done, open the plot window
         plt.xlabel("x")
         plt.ylabel("y")
+        ax.set_zlabel("Function value")
+        plt.title(plot_title)
         plt.legend()
         plt.show()
 
