@@ -23,9 +23,9 @@ class DataHandler():
 
 
     def noise(self, input_tensor):
-        self.snr *= torch.max(input_tensor)
-        return torch.normal(torch.zeros_like(input_tensor),\
-                             torch.zeros_like(input_tensor)+(self.snr**2))
+        n = torch.normal(torch.zeros_like(input_tensor),
+                         torch.zeros_like(input_tensor)+(self.snr*torch.max(input_tensor)))
+        return input_tensor + n
 
 
     def get_mesh(self):
@@ -35,14 +35,14 @@ class DataHandler():
 
 
     def get_training_data(self):
-
         sample_span = SAMPLE_MAX - SAMPLE_MIN
 
 
         train_x1 = (sample_span * torch.rand(self.samples) + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
         train_x2 = (sample_span * torch.rand(self.samples) + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
         train_x = torch.concat((train_x1, train_x2), dim=1)
-        train_y = sin(train_x1, train_x2) + self.noise(train_x1)
+        train_y = sin(train_x1, train_x2)
+        train_y = self.noise(train_y)
 
         return train_x, train_y
 
