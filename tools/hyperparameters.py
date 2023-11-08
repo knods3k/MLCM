@@ -3,7 +3,7 @@ import torch.nn as nn
 HIDDEN_DIM = 640
 INPUT_DIM = 2
 OUTPUT_DIM = 1
-N_LAYERS = 3
+N_LAYERS = 5
 ACTIVATION = nn.ReLU()
 
 EPOCHS = 1500
