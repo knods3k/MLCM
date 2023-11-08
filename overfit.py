@@ -12,3 +12,4 @@ model.start_training(data_handler)
 eval_and_plot(model, data_handler)
 
 # %%
+eval_metrics_overfit = eval_and_plot(model, data_handler)
