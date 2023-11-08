@@ -8,6 +8,10 @@ from tools.settings import DEVICE
 HYPERPARAMS = Hyperparameters()
 
 class Model(nn.Module):
+    """
+    Model is the base class for all models. It contains the start_training, start_evaluation and save methods.
+    :param hyperparams: The hyperparameters to use for training the network. Those are set in tools/hyperparameters.py.
+    """
     def __init__(self, *args, hyperparams=HYPERPARAMS, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.hyperparams = hyperparams
@@ -75,6 +79,9 @@ class Model(nn.Module):
         torch.save(self, model_file)
 
 class MLP(Model):
+    """
+    MLP is a class that represents a multilayer perceptron. It inherits from Model base class.
+    """
     def __init__(self, *args, **kwargs) -> None:
         super(MLP, self).__init__(*args, **kwargs)
         self.hidden_dim = self.hyperparams.hidden_dim
@@ -94,6 +101,11 @@ class MLP(Model):
         self.layers.append(nn.Linear(self.hidden_dim, self.output_dim))
 
     def forward(self, input_data):
+        """
+        Forward pass of the network.
+        :param input_data:
+        :return: input_data passed through the network.
+        """
         for layer in self.layers:
             input_data = layer(input_data)
         return input_data

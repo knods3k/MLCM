@@ -11,6 +11,18 @@ LEARNING_RATE = .001
 CRITERION = nn.MSELoss(reduction='mean')
 
 class Hyperparameters():
+    """
+    Hyperparameters is a class that contains all the hyperparameters for the network. The parameters are set as
+    global variables.
+    :param hidden_dim: The number of neurons in each hidden layer.
+    :param input_dim: The number of input neurons.
+    :param output_dim: The number of output neurons.
+    :param n_layers: The number of hidden layers.
+    :param activation: The activation function to use.
+    :param epochs: The number of epochs to train the network.
+    :param learning_rate: The learning rate to use for the optimizer.
+    :param criterion: The loss function to use.
+    """
     def __init__(self, hidden_dim=HIDDEN_DIM, input_dim=INPUT_DIM,\
                  output_dim=OUTPUT_DIM, n_layers=N_LAYERS, activation=ACTIVATION,\
                       epochs=EPOCHS,\
