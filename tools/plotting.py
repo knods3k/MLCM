@@ -2,14 +2,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tools.data import sin
 from tools.settings import DEVICE
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error, f1_score
 
 def eval_and_plot(model, data_handler):
+        """
+        Evaluates the model and plots the results. Evaluation metrics are RMSE, MSE, MAE, R2, MAPE, F1.
+        :param model:
+        :param data_handler:
+        :return: evaluation metrics
+        """
         test_x1_mesh, test_x2_mesh = data_handler.get_mesh()
         train_x, train_y = data_handler.get_training_data()
         test_x, test_y = data_handler.get_test_data()
         net_outputs_test = model(test_x.to(DEVICE)).cpu().detach()
         # train_x = train_x.cpu().detach().numpy()
         # train_y = train_y.cpu().detach().numpy()
+
+        # Calculate the standard metrics RMSE, MSE, MAE, R2, MAPE, F1
+        rmse = np.sqrt(mean_squared_error(test_y, net_outputs_test))
+        print(f"RMSE: {rmse}")
+        mse = mean_squared_error(test_y, net_outputs_test)
+        print(f"MSE: {mse}")
+        mae = mean_absolute_error(test_y, net_outputs_test)
+        print(f"MAE: {mae}")
+        r2 = r2_score(test_y, net_outputs_test)
+        print(f"R2: {r2}")
+        mape = mean_absolute_percentage_error(test_y, net_outputs_test)
+        print(f"MAPE: {mape}")
+        f1 = f1_score(test_y, net_outputs_test)
+
+        eval_metrics = {"RMSE": rmse, "MSE": mse, "MAE": mae, "R2": r2, "MAPE": mape, "F1": f1}
 
         plt.figure(figsize=(16,9))
         ax = plt.subplot(111, projection='3d')
@@ -30,3 +52,5 @@ def eval_and_plot(model, data_handler):
         plt.ylabel("y")
         plt.legend()
         plt.show()
+
+        return eval_metrics
