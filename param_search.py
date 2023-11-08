@@ -10,7 +10,7 @@ LEARNING_RATES = [.1, .01, .001, .0001, .00001]
 HIDDEN_DIMENSIONS = [80, 160, 320, 640, 1280]
 EPOCHS = 250
 
-ADJUST_LR = [.1, .25, .5, .75 , 1., 1.5, 2., 4.]
+ADJUST_LR = [.1, .3, .5, .7 , 1., 1.5, 2., 4.]
 
 data_handler = DataHandler()
 params = Hyperparameters()
