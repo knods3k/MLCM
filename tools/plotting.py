@@ -18,7 +18,7 @@ def eval_and_plot(model, data_handler):
         # train_x = train_x.cpu().detach().numpy()
         # train_y = train_y.cpu().detach().numpy()
 
-        # Calculate the standard metrics RMSE, MSE, MAE, R2, MAPE, F1
+        # Calculate the standard metrics RMSE, MSE, MAE, R2, MAPE
         rmse = np.sqrt(mean_squared_error(test_y, net_outputs_test))
         print(f"RMSE: {rmse}")
         mse = mean_squared_error(test_y, net_outputs_test)
