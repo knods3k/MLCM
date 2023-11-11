@@ -70,6 +70,9 @@ class Model(nn.Module):
             targets.append(test_y.cpu().detach().numpy())
             testlosses.append(self.hyperparams.criterion(out, test_y.to(DEVICE)).item())
         return outputs, targets, testlosses
+
+    def sum_weights(self):
+        return sum(torch.linalg.norm(p) for p in self.parameters())
     
     def save(self, model_file):
         torch.save(self, model_file)
