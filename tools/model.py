@@ -13,6 +13,7 @@ class Model(nn.Module):
         self.hyperparams = hyperparams
 
     def start_training(self, data_handler, model_file=None, verbosity=2):
+        data_handler.batch_size = self.hyperparams.batch_size
         train_loader = data_handler.get()
         self.to(DEVICE)
 
