@@ -21,6 +21,12 @@ class DataHandler():
         self.snr = snr
         self.batchsize = batchsize
 
+        self.reset()
+
+    @staticmethod
+    def reset():
+        torch.random.manual_seed(1)
+
 
     def noise(self, input_tensor):
         n = torch.normal(torch.zeros_like(input_tensor),
@@ -38,8 +44,10 @@ class DataHandler():
         sample_span = SAMPLE_MAX - SAMPLE_MIN
 
 
-        train_x1 = (sample_span * torch.rand(self.samples) + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
-        train_x2 = (sample_span * torch.rand(self.samples) + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
+        train_x1 = (sample_span * torch.rand(self.samples)
+                    + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
+        train_x2 = (sample_span * torch.rand(self.samples)
+                    + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
         train_x = torch.concat((train_x1, train_x2), dim=1)
         train_y = sin(train_x1, train_x2)
         train_y = self.noise(train_y)
@@ -66,7 +74,8 @@ class DataHandler():
 
     def get_data_loader(self):
         tensor_dataset = self.get_tensor_dataset()
-        return DataLoader(tensor_dataset, shuffle=True, batch_size=self.batchsize, drop_last=False)
+        return DataLoader(tensor_dataset, shuffle=True,
+                          batch_size=self.batchsize, drop_last=False)
 
 
     def get(self):

@@ -8,11 +8,13 @@ import torch.nn as nn
 MODELFILE = "mymodel.torch"
 LEARNING_RATES = [.1, .01, .001, .0001, .00001]
 HIDDEN_DIMENSIONS = [80, 160, 320, 640, 1280]
-EPOCHS = 250
+EPOCHS = 500
 
-ADJUST_LR = [.1, .3, .5, .7 , 1., 1.5, 2., 4.]
+ADJUST_LR = [.1, .3, .5, .7 , 1., 2., 3., 4.]
 
-data_handler = DataHandler()
+SNR = .1
+
+data_handler = DataHandler(snr=SNR)
 params = Hyperparameters()
 
 best_lr = None
@@ -21,6 +23,7 @@ min_error = Inf
 for hidden_dim in HIDDEN_DIMENSIONS:
     print(f'Hidden Dimension: {hidden_dim}')
     for lr in LEARNING_RATES:
+        data_handler.reset()
         params.hidden_dim=hidden_dim
         params.learning_rate = lr
         params.epochs = EPOCHS
@@ -32,13 +35,14 @@ for hidden_dim in HIDDEN_DIMENSIONS:
             min_error = error
             best_lr = lr
             best_dim = hidden_dim
-        print(f'\t Learning Rate: {lr} \t \t \t Loss: {round(error, ndigits=4)}')
+        print(f'\t Learning Rate: {lr} \t \t \t Evaluation Error: {round(error, ndigits=4)}')
 
 print(f'Best Hidden Dimension: {best_dim} \t \t \t Best Learning Rate: {best_lr}')
 
-very_best_lr = best_lr
+very_best_lr = None
 min_error = Inf
 for adjust_lr in ADJUST_LR:
+    data_handler.reset()
     lr = best_lr * adjust_lr
     params.hidden_dim = best_dim
     params.learning_rate = lr
@@ -50,7 +54,7 @@ for adjust_lr in ADJUST_LR:
     if error < min_error:
         min_error = error
         very_best_lr = lr
-    print(f'\t Learning Rate: {round(lr, ndigits=10)} \t \t \t Loss: {round(error, ndigits=4)}')
+    print(f'\t Learning Rate: {round(lr, ndigits=10)} \t \t \t Evaluation Error: {round(error, ndigits=4)}')
 
 print(f'Very Best Learning Rate: {very_best_lr}')
 params.hidden_dim = best_dim
