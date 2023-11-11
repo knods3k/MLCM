@@ -8,6 +8,7 @@ ACTIVATION = nn.ReLU()
 
 EPOCHS = 1500
 LEARNING_RATE = .001
+BATCH_SIZE = 160
 CRITERION = nn.MSELoss(reduction='mean')
 
 class Hyperparameters():
@@ -23,10 +24,13 @@ class Hyperparameters():
     :param learning_rate: The learning rate to use for the optimizer.
     :param criterion: The loss function to use.
     """
-    def __init__(self, hidden_dim=HIDDEN_DIM, input_dim=INPUT_DIM,\
-                 output_dim=OUTPUT_DIM, n_layers=N_LAYERS, activation=ACTIVATION,\
-                      epochs=EPOCHS,\
-                    learning_rate=LEARNING_RATE, criterion=CRITERION) -> None:
+    
+    def __init__(self, hidden_dim=HIDDEN_DIM, input_dim=INPUT_DIM,
+                 output_dim=OUTPUT_DIM, n_layers=N_LAYERS,
+                 activation=ACTIVATION, epochs=EPOCHS,
+                 learning_rate=LEARNING_RATE, batch_size=BATCH_SIZE,
+                 criterion=CRITERION) -> None:
+      
         super(Hyperparameters, self).__init__()
         self.hidden_dim = hidden_dim
         self.input_dim = input_dim
@@ -36,4 +40,5 @@ class Hyperparameters():
 
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self.batch_size = batch_size
         self.criterion = criterion

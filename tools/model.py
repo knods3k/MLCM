@@ -17,6 +17,7 @@ class Model(nn.Module):
         self.hyperparams = hyperparams
 
     def start_training(self, data_handler, model_file=None, verbosity=2):
+        data_handler.batch_size = self.hyperparams.batch_size
         train_loader = data_handler.get()
         self.to(DEVICE)
 
@@ -74,6 +75,9 @@ class Model(nn.Module):
             targets.append(test_y.cpu().detach().numpy())
             testlosses.append(self.hyperparams.criterion(out, test_y.to(DEVICE)).item())
         return outputs, targets, testlosses
+
+    def sum_weights(self):
+        return sum(torch.linalg.norm(p) for p in self.parameters())
     
     def save(self, model_file):
         torch.save(self, model_file)
