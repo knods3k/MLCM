@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from tools.data import sin
 from tools.settings import DEVICE
 
 def eval_and_plot(model, data_handler):
