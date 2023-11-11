@@ -13,7 +13,7 @@ CRITERION = nn.MSELoss(reduction='mean')
 
 class Hyperparameters():
     """
-    Hyperparameters is a class that contains all the hyperparameters for the network. The parameters are set as
+    Hyperparameters is a class that contains all the hyperparameters for the network. Default values are set as
     global variables.
     :param hidden_dim: The number of neurons in each hidden layer.
     :param input_dim: The number of input neurons.
