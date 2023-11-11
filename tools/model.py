@@ -10,7 +10,7 @@ HYPERPARAMS = Hyperparameters()
 class Model(nn.Module):
     """
     Model is the base class for all models. It contains the start_training, start_evaluation and save methods.
-    :param hyperparams: The hyperparameters to use for training the network. Those are set in tools/hyperparameters.py.
+    :param hyperparams: The hyperparameters to use for training the network. Default values are set in tools/hyperparameters.py.
     """
     def __init__(self, *args, hyperparams=HYPERPARAMS, **kwargs) -> None:
         super().__init__(*args, **kwargs)
