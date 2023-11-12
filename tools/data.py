@@ -8,7 +8,7 @@ SAMPLE_MAX = 5
 BATCH_SIZE = 160
 
 def sin(x, y):
-    return torch.square(x) + torch.square(y)
+    return x * y
 
 class DataHandler():
     """
