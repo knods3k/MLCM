@@ -7,6 +7,6 @@ if torch.backends.mps.is_available():
     DEVICE = torch.device('mps')
 elif torch.cuda.is_available():
     DEVICE = torch.device('gpu')
-elif torch.cpu.is_available():
+else:
     DEVICE = torch.device('cpu')
 
