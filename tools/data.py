@@ -7,7 +7,7 @@ SAMPLE_MAX = 5
 
 BATCH_SIZE = 160
 
-def sin(x, y):
+def target_function(x, y):
     return x * y
 
 class DataHandler():
@@ -23,7 +23,7 @@ class DataHandler():
     :param batchsize: The batch size to use for training the network.
     """
     def __init__(self, samples=SAMPLES, sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,\
-                function=sin, snr=0., batchsize=BATCH_SIZE) -> None:
+                function=target_function, snr=0., batchsize=BATCH_SIZE) -> None:
         super(DataHandler, self).__init__()
         self.samples = samples
         self.sample_min = sample_min
@@ -72,7 +72,7 @@ class DataHandler():
                     + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
         
         train_x = torch.concat((train_x1, train_x2), dim=1)
-        train_y = sin(train_x1, train_x2)
+        train_y = target_function(train_x1, train_x2)
         train_y = self.noise(train_y)
 
         return train_x, train_y
@@ -89,7 +89,7 @@ class DataHandler():
         test_x1 = test_x1_mesh.flatten().unsqueeze(1)
         test_x2 = test_x2_mesh.flatten().unsqueeze(1)
         test_x = torch.cat((test_x1, test_x2), dim=1)
-        test_y = sin(test_x1, test_x2)
+        test_y = target_function(test_x1, test_x2)
 
         return test_x, test_y
 

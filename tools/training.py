@@ -27,6 +27,8 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
     early_stopping = EarlyStopping(patience=patience)
     data_handler.batch_size = model.hyperparams.batch_size
     test_x, test_y = data_handler.get_test_data()
+    test_x = test_x.to(DEVICE)
+    test_y = test_y.to(DEVICE)
     train_loader = data_handler.get()
     model.to(DEVICE)
 
@@ -53,7 +55,7 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
                                                                 avg_loss / len(train_loader)),
                                                                 end='\r', flush=True)
         avg_losses[epoch] = avg_loss / len(train_loader) 
-        validation_loss = model.hyperparams.criterion(model(test_x.to(DEVICE)), test_y.to(DEVICE))
+        validation_loss = model.hyperparams.criterion(model(test_x), test_y)
         if early_stopping(validation_loss):
             break
 
