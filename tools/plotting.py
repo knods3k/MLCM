@@ -36,14 +36,14 @@ def eval_and_plot(model, data_handler, plot_title=""):
         ax = plt.subplot(111, projection='3d')
 
         ax.plot_surface(test_x1_mesh, test_x2_mesh,
-                        test_y.reshape(data_handler.test_samples,data_handler.test_samples),
+                        test_y.reshape(data_handler.samples,data_handler.samples),
                         color='w', label="Target", alpha=.2, lw=.5, edgecolor='b')
         
         ax.scatter(train_x[:,0], train_x[:,1], train_y, marker="^", color="r", label="Target", s=100)
         
         ax.plot_surface(
                 test_x1_mesh, test_x2_mesh,
-                net_outputs_test.reshape(data_handler.test_samples,data_handler.test_samples),
+                net_outputs_test.reshape(data_handler.samples,data_handler.samples),
                 edgecolor="w", color="g", alpha=.3, label="Learned", lw=.1
                 )
         ## All plotting is done, open the plot window
