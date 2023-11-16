@@ -1,57 +1,95 @@
-import numpy as np
-import matplotlib.pyplot as plt
 from tools.settings import DEVICE
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
+from tools.data import DataHandler
+import torch
+import matplotlib.pyplot as plt
 
-def eval_and_plot(model, data_handler, plot_title=""):
-        """
-        Evaluates the model and plots the results. Evaluation metrics are RMSE, MSE, MAE, R2, MAPE.
-        :param model:
-        :param data_handler:
-        :param plot_title:
-        :return: evaluation metrics
-        """
-        test_x1_mesh, test_x2_mesh = data_handler.get_mesh()
-        train_x, train_y = data_handler.get_training_data()
-        test_x, test_y = data_handler.get_test_data()
-        net_outputs_test = model(test_x.to(DEVICE)).cpu().detach()
-        # train_x = train_x.cpu().detach().numpy()
-        # train_y = train_y.cpu().detach().numpy()
 
-        # Calculate the standard metrics RMSE, MSE, MAE, R2, MAPE
-        rmse = np.sqrt(mean_squared_error(test_y, net_outputs_test))
-        print(f"RMSE: {rmse}")
-        mse = mean_squared_error(test_y, net_outputs_test)
-        print(f"MSE: {mse}")
-        mae = mean_absolute_error(test_y, net_outputs_test)
-        print(f"MAE: {mae}")
-        r2 = r2_score(test_y, net_outputs_test)
-        print(f"R2: {r2}")
-        mape = mean_absolute_percentage_error(test_y, net_outputs_test)
-        print(f"MAPE: {mape}")
+class EarlyStopping():
+    def __init__(self, patience=10, delta_min=0) -> None:
+        self.patience = patience
+        self.delta_min = delta_min
+        self.counter = 0
+        self.min_validation_loss = float('inf')
 
-        eval_metrics = {"RMSE": rmse, "MSE": mse, "MAE": mae, "R2": r2, "MAPE": mape}
+    def __call__(self, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+        elif validation_loss > (self.min_validation_loss + self.delta_min):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
+    
 
-        plt.figure(figsize=(16,9))
-        ax = plt.subplot(111, projection='3d')
 
-        ax.plot_surface(test_x1_mesh, test_x2_mesh,
-                        test_y.reshape(data_handler.samples,data_handler.samples),
-                        color='w', label="Target", alpha=.2, lw=.5, edgecolor='b')
-        
-        ax.scatter(train_x[:,0], train_x[:,1], train_y, marker="^", color="r", label="Target", s=100)
-        
-        ax.plot_surface(
-                test_x1_mesh, test_x2_mesh,
-                net_outputs_test.reshape(data_handler.samples,data_handler.samples),
-                edgecolor="w", color="g", alpha=.3, label="Learned", lw=.1
-                )
-        ## All plotting is done, open the plot window
-        plt.xlabel("x")
-        plt.ylabel("y")
-        ax.set_zlabel("Function value")
-        plt.title(plot_title)
-        plt.legend()
+def start_training(model, data_handler, model_file=None, verbosity=2, patience=float('inf')):
+    early_stopping = EarlyStopping(patience=patience)
+    data_handler.batch_size = model.hyperparams.batch_size
+    test_x, test_y = data_handler.get_test_data()
+    train_loader = data_handler.get()
+    model.to(DEVICE)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=model.hyperparams.learning_rate)
+    avg_losses = torch.zeros(model.hyperparams.epochs)
+    vali_losses = torch.zeros(model.hyperparams.epochs)
+
+
+    for epoch in range(model.hyperparams.epochs):
+        model.train()
+        avg_loss = 0.
+        vali_loss = 0.
+        for x, y in train_loader:
+            model.zero_grad()
+
+            out = model(x.to(DEVICE))
+            loss = model.hyperparams.criterion(out, y.to(DEVICE))
+
+            loss.backward()
+            optimizer.step()
+
+            avg_loss += loss.item()
+
+            if epoch % 20 == 0 and verbosity >= 1:
+                print("Epoch {}/{} Done, Total Loss: {}".format(epoch, model.hyperparams.epochs,
+                                                                avg_loss / len(train_loader)),
+                                                                end='\r', flush=True)
+        avg_losses[epoch] = avg_loss / len(train_loader) 
+        validation_loss = model.hyperparams.criterion(model(test_x.to(DEVICE)), test_y.to(DEVICE))
+ 
+        vali_losses[epoch] = validation_loss        
+
+        if early_stopping(validation_loss):
+            break
+        if epoch % 20 == 0 and verbosity >= 1:
+                print("Validation Loss: {}".format(vali_losses[epoch] / len(train_loader)),
+                                                                end='\r', flush=True)
+    if verbosity >= 2:
+        plt.figure(figsize=(12, 8))
+        plt.plot(vali_losses.detach().numpy(), "-")
+        plt.plot(avg_losses, "-")
+        plt.title("Train loss\Validation loss (MSE, reduction=mean, averaged over epoch)")
+        plt.xlabel("Epoch")
+        plt.ylabel("loss")
+        plt.grid(visible=True, which='both', axis='both')
         plt.show()
 
-        return eval_metrics
+    if model_file is not None:
+        torch.save(model, model_file)
+    return model
+
+
+def start_evaluation(model, data_handler):
+    test_x, test_y = data_handler.get_test_data()
+    with torch.no_grad():
+        model.eval() 
+        outputs = [] 
+        targets = []
+        testlosses = []
+
+        out = model(test_x.to(DEVICE))
+
+        outputs.append(out.cpu().detach().numpy())
+        targets.append(test_y.cpu().detach().numpy())
+        testlosses.append(model.hyperparams.criterion(out, test_y.to(DEVICE)).item())
+    return outputs, targets, testlosses
