@@ -24,11 +24,10 @@ class HyperelasticMaterial():
 
         :returns: Helmholtz free energy
         '''
-        X.requires_grad = True
+        if not X.requires_grad:
+            raise TypeError(f"X.requires_grad={X.requires_grad}, needs to be True")
         x = X + u
-        F = torch.autograd.grad(x, X,
-                                grad_outputs=torch.ones_like(u),
-                                retain_graph=True)[0]
+        F = torch.autograd.grad(x, X, grad_outputs=torch.ones_like(u), retain_graph=True)[0]
         C = F.T.mm(F)
         I3 = torch.linalg.det(C)
         J = torch.sqrt(I3)
