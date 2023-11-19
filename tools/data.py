@@ -23,12 +23,13 @@ class DataHandler():
     :param batchsize: The batch size to use for training the network.
     """
     def __init__(self, samples=SAMPLES, sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,\
-                function=target_function, snr=0., batchsize=BATCH_SIZE) -> None:
+                target_function=target_function, snr=0., batchsize=BATCH_SIZE) -> None:
         super(DataHandler, self).__init__()
         self.samples = samples
+        self.test_samples = samples//10
         self.sample_min = sample_min
         self.sample_max = sample_max
-        self.function = function
+        self.target_function = target_function
         self.snr = snr
         self.batchsize = batchsize
 
@@ -55,8 +56,8 @@ class DataHandler():
         Generates a meshgrid for the test data.
         :return: meshgrid for the test data.
         """
-        test_x1 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.samples)
-        test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.samples)
+        test_x1 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
+        test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
         return torch.meshgrid(test_x1, test_x2, indexing='ij') 
 
 
@@ -72,7 +73,7 @@ class DataHandler():
                     + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
         
         train_x = torch.concat((train_x1, train_x2), dim=1)
-        train_y = target_function(train_x1, train_x2)
+        train_y = self.target_function(train_x1, train_x2)
         train_y = self.noise(train_y)
 
         return train_x, train_y
@@ -83,13 +84,13 @@ class DataHandler():
         Generates test data. Independent variables x and dependent variables y are generated.
         :return: test_x and test_y.
         """
-        test_x1 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.samples)
-        test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.samples)
+        test_x1 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
+        test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
         test_x1_mesh, test_x2_mesh = torch.meshgrid(test_x1, test_x2, indexing='ij')
         test_x1 = test_x1_mesh.flatten().unsqueeze(1)
         test_x2 = test_x2_mesh.flatten().unsqueeze(1)
         test_x = torch.cat((test_x1, test_x2), dim=1)
-        test_y = target_function(test_x1, test_x2)
+        test_y = self.target_function(test_x1, test_x2)
 
         return test_x, test_y
 
