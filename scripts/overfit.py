@@ -15,3 +15,8 @@ def overfit(data_handler=DATA_HANDLER, epochs=EPOCHS, learning_rate=LEARNING_RAT
     model.start_training(data_handler)
     return model
 
+if __name__ == '__main__':
+    model = overfit()
+    eval_and_plot(model, DATA_HANDLER)
+
+# %%
