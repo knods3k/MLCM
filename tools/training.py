@@ -51,8 +51,7 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
             avg_loss += loss.item()
 
             if epoch % 20 == 0 and verbosity >= 1:
-                print("Epoch {}/{} Done, Total Loss: {}".format(epoch, model.hyperparams.epochs,
-                                                                avg_loss / len(train_loader)),
+                print(f"Epoch {epoch:6d}/{model.hyperparams.epochs} \t\t Total Loss: \t {(avg_loss/len(train_loader)):.2e} \t",
                                                                 end='\r', flush=True)
         avg_losses[epoch] = avg_loss / len(train_loader) 
         validation_loss = model.hyperparams.criterion(model(test_x), test_y)

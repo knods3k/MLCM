@@ -56,7 +56,8 @@ class DataHandler():
         :return: input_tensor + noise (n)
         """
         n = torch.normal(torch.zeros_like(input_tensor),
-                         torch.zeros_like(input_tensor)+(self.snr*torch.max(input_tensor)))
+                         torch.zeros_like(input_tensor)+(
+                             torch.abs(self.snr*torch.max(input_tensor))))
         return input_tensor + n
 
 
