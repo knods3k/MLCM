@@ -39,6 +39,9 @@ class MLP(Model):
         self.output_dim = self.hyperparams.output_dim
         self.n_layers = self.hyperparams.n_layers
 
+        self.build()
+
+    def build(self):
         self.layers = nn.ModuleList()
         self.activation = self.hyperparams.activation
 

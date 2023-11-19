@@ -1,3 +1,6 @@
+#%%
+from tools.material import HyperelasticMaterial
+
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -7,8 +10,14 @@ SAMPLE_MAX = 5
 
 BATCH_SIZE = 160
 
+MATERIAL = HyperelasticMaterial()
+MAX_BODY_SIZE = 200
+
 def target_function(x, y):
     return x * y
+
+def deformation_function(x):
+    return x**3 * torch.sin(x)
 
 class DataHandler():
     """
@@ -66,7 +75,7 @@ class DataHandler():
         Generates training data. Independent variables x and dependent variables y are generated.
         :return: train_x and train_y.
         """
-        sample_span = SAMPLE_MAX - SAMPLE_MIN
+        sample_span = self.sample_max - self.sample_min
         train_x1 = (sample_span * torch.rand(self.samples)
                     + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
         train_x2 = (sample_span * torch.rand(self.samples)
@@ -120,3 +129,47 @@ class DataHandler():
         :return: self.get_data_loader()
         """
         return self.get_data_loader()
+    
+
+class MaterialDataHandler(DataHandler):
+    def __init__(self, material=MATERIAL, samples=SAMPLES, max_body_size=MAX_BODY_SIZE,
+                 sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,
+                 deformation_function=deformation_function, snr=0, batchsize=BATCH_SIZE):
+        super().__init__(samples, sample_min, sample_max, deformation_function, snr, batchsize)
+
+        self.material = material
+        self.max_body_size = max_body_size
+
+
+    def get_test_data(self):
+        """
+        Generates training data. Independent variables x and dependent variables y are generated.
+        :return: train_x and train_y.
+        """
+        body_size = torch.randint(self.max_body_size, ())
+
+        X = torch.rand((self.samples, body_size, 2))
+        self.material.set_body_configuration(X)
+        self.material.deform(deformation_function)
+        self.material.set_stresses()
+        train_x = self.material.C.flatten(start_dim=1)
+        train_y = self.material.get_helmholtz_free_energy().unsqueeze(-1)
+
+        return train_x, train_y
+
+
+    def get_training_data(self):
+        """
+        Generates training data. Independent variables x and dependent variables y are generated.
+        :return: train_x and train_y.
+        """
+        train_x, train_y = self.get_test_data()
+        train_y = self.noise(train_y)
+
+        return train_x, train_y
+
+
+if __name__ == "__main__":
+    mdata = MaterialDataHandler()
+    x, y = mdata.get_training_data()
+# %%
