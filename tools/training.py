@@ -34,6 +34,7 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
 
     optimizer = torch.optim.Adam(model.parameters(), lr=model.hyperparams.learning_rate)
     avg_losses = torch.zeros(model.hyperparams.epochs)
+    val_losses = torch.zeros(model.hyperparams.epochs)
 
     for epoch in range(model.hyperparams.epochs):
         model.train()
@@ -55,6 +56,7 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
                                                                 end='\r', flush=True)
         avg_losses[epoch] = avg_loss / len(train_loader) 
         validation_loss = model.hyperparams.criterion(model(test_x), test_y)
+        val_losses[epoch] = validation_loss.item()
         if early_stopping(validation_loss):
             break
 
@@ -62,10 +64,12 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
 
     if verbosity >= 2:
         plt.figure(figsize=(12, 8))
-        plt.plot(avg_losses, "-")
-        plt.title("Train loss (MSE, reduction=mean, averaged over epoch)")
+        plt.plot(avg_losses, "-", color="blue", label="Train loss")
+        plt.plot(val_losses, "-", color="orange", label="Validation loss")
+        plt.title("Train and validation loss (MSE, reduction=mean, averaged over epoch)")
         plt.xlabel("Epoch")
-        plt.ylabel("loss")
+        plt.ylabel("Loss")
+        plt.legend()
         plt.grid(visible=True, which='both', axis='both')
         plt.show()
 
