@@ -9,7 +9,7 @@ import torch
 MATERIAL = HyperelasticMaterial()
 HIDDEN_DIM = 120
 N_LAYERS = 5
-EPOCHS = 20
+EPOCHS = 20000
 
 
 def deformation_function(X):
