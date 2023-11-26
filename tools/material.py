@@ -19,11 +19,12 @@ class HyperelasticMaterial():
 
     def set_body_configuration(self, X):
         self.X = X
-        self.X.requires_grad = True
+        if not self.X.requires_grad:
+            self.X.requires_grad = True
         
 
     def deform(self, deformation_function):
-        self.u = deformation_function(self.X)
+        self.u = deformation_function(self.X) - self.X
         self.set_stresses()
         return self.u
 

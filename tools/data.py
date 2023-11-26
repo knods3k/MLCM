@@ -12,6 +12,7 @@ BATCH_SIZE = 160
 
 MATERIAL = HyperelasticMaterial()
 MAX_BODY_SIZE = 200
+MAX_BODY_SCALE = 10
 
 def target_function(x, y):
     return x * y
@@ -57,7 +58,7 @@ class DataHandler():
         """
         n = torch.normal(torch.zeros_like(input_tensor),
                          torch.zeros_like(input_tensor)+(
-                             torch.abs(self.snr*torch.max(input_tensor))))
+                             torch.abs(self.snr*torch.max(input_tensor)))) 
         return input_tensor + n
 
 
@@ -73,7 +74,8 @@ class DataHandler():
 
     def get_training_data(self):
         """
-        Generates training data. Independent variables x and dependent variables y are generated.
+        Generates training data. Independent variables x
+        and dependent variables y are generated.
         :return: train_x and train_y.
         """
         sample_span = self.sample_max - self.sample_min
@@ -91,7 +93,8 @@ class DataHandler():
 
     def get_test_data(self):
         """
-        Generates test data. Independent variables x and dependent variables y are generated.
+        Generates test data. Independent variables x
+        and dependent variables y are generated.
         :return: test_x and test_y.
         """
         test_x1 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
@@ -134,22 +137,26 @@ class DataHandler():
 
 class MaterialDataHandler(DataHandler):
     def __init__(self, material=MATERIAL, samples=SAMPLES, max_body_size=MAX_BODY_SIZE,
+                 max_body_scale=MAX_BODY_SCALE,
                  sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,
                  deformation_function=deformation_function, snr=0, batchsize=BATCH_SIZE):
         super().__init__(samples, sample_min, sample_max, deformation_function, snr, batchsize)
 
         self.material = material
         self.max_body_size = max_body_size
+        self.max_body_scale = max_body_scale
 
 
     def get_test_data(self):
         """
-        Generates training data. Independent variables x and dependent variables y are generated.
+        Generates training data. Independent variables x
+        and dependent variables y are generated.
         :return: train_x and train_y.
         """
-        body_size = torch.randint(self.max_body_size, ())
+        body_size = int(torch.randint(self.max_body_size, ()))
+        body_scale = int(torch.randint(self.max_body_scale, ()))
 
-        X = torch.rand((self.samples, body_size, 2))
+        X = torch.normal(0,1,(self.samples, body_size, 2)) * body_scale
         self.material.set_body_configuration(X)
         self.material.deform(deformation_function)
         self.material.set_stresses()
@@ -161,7 +168,8 @@ class MaterialDataHandler(DataHandler):
 
     def get_training_data(self):
         """
-        Generates training data. Independent variables x and dependent variables y are generated.
+        Generates training data. Independent variables x
+        and dependent variables yare generated.
         :return: train_x and train_y.
         """
         train_x, train_y = self.get_test_data()
