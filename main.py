@@ -5,7 +5,6 @@ from scripts.overfit import overfit
 from scripts.param_search import parameter_search
 from scripts.regularize import regularize
 
-import torch
 
 MODELFILE = "mymodel.torch"
 
@@ -20,7 +19,6 @@ SNR = 1.
 
 DATA_HANDLER = DataHandler(snr=SNR)
 
-INITIAL_MODEL = torch.load(MODELFILE)
 LAMBDAS = [9., 5., 1., .5, .1, 0.]
 
 if __name__ == '__main__':
@@ -30,14 +28,16 @@ if __name__ == '__main__':
     initial_model = parameter_search(data_handler=DATA_HANDLER, epochs=EPOCHS,
                                      learning_rates=LEARNING_RATES,
                                      adjust_learning_rates=ADJUST_LEARNING_RATES,
-                                     hidden_dimensions=HIDDEN_DIMENSIONS, patience=PATIENCE)
+                                     hidden_dimensions=HIDDEN_DIMENSIONS, patience=PATIENCE,
+                                     modelfile=MODELFILE)
     eval_and_plot(initial_model, DATA_HANDLER, plot_title='Initial Model')
 
-    regularized_model = regularize(initial_model=INITIAL_MODEL,
+    regularized_model = regularize(initial_model=initial_model,
                                    data_handler=DATA_HANDLER, epochs=EPOCHS,
                                      learning_rates=LEARNING_RATES,
                                      adjust_learning_rates=ADJUST_LEARNING_RATES,
-                                     lambdas=LAMBDAS, patience=PATIENCE)
+                                     lambdas=LAMBDAS, patience=PATIENCE,
+                                     modelfile=MODELFILE)
     eval_and_plot(regularized_model, DATA_HANDLER, plot_title='Regularized Model')
 
 
