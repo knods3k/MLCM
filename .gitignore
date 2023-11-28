@@ -3,6 +3,7 @@ ignore/
 .DS_Store
 *.torch
 .vscode
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
