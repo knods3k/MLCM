@@ -22,9 +22,22 @@ class EarlyStopping():
         return False
     
 
+class RestoreBest():
+    def __init__(self, delta_min=0) -> None:
+        self.best_model = None
+        self.delta_min = delta_min
+        self.min_validation_loss = float('inf')
+
+    def __call__(self, model, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.best_model = model
+    
+
 
 def start_training(model, data_handler, model_file=None, verbosity=2, patience=float('inf')):
     early_stopping = EarlyStopping(patience=patience)
+    restore_best = RestoreBest()
     data_handler.batch_size = model.hyperparams.batch_size
     test_x, test_y = data_handler.get_test_data()
     test_x = test_x.to(DEVICE)
@@ -50,13 +63,21 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
 
             avg_loss += loss.item()
 
-            if epoch % 20 == 0 and verbosity >= 1:
-                print(f"Epoch {epoch:6d}/{model.hyperparams.epochs} \t\t Total Loss: \t {(avg_loss/len(train_loader)):.2e} \t",
-                                                                end='\r', flush=True)
         avg_losses[epoch] = avg_loss / len(train_loader) 
         validation_loss = model.hyperparams.criterion(model(test_x), test_y)
+        restore_best(model, validation_loss)
         if early_stopping(validation_loss):
             break
+        if epoch % 20 == 0 and verbosity >= 1:
+            print(f"Epoch {epoch:6d}/{model.hyperparams.epochs} \t\t Test Loss: \t {validation_loss:.2e} \t",
+                                                            end='\r', flush=True)
+    
+    model = restore_best.best_model
+
+    validation_loss = model.hyperparams.criterion(model(test_x), test_y)
+
+    print(f"\n \t\t \t\t Final Loss: \t {(validation_loss):.2e} \t",
+                                                                end='\r', flush=True)
 
 
 
