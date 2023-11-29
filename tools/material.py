@@ -29,10 +29,21 @@ class HyperelasticMaterial():
         return self.u
 
     def set_stresses(self):
-        x = self.X + self.u
-        self.F = torch.autograd.grad(x, self.X, grad_outputs=torch.ones_like(x),
+        self.x = self.X + self.u
+        batch_size, body_size, _ = self.x.size()
+        duxdxy = torch.autograd.grad(self.x[:,:,0], self.X,\
+                                     grad_outputs=torch.ones((batch_size,body_size)),
                                      retain_graph=True)[0]
-        self.C = torch.transpose(self.F, -2, -1).bmm(self.F)
+        duydxy = torch.autograd.grad(self.x[:,:,1], self.X,\
+                                     grad_outputs=torch.ones((batch_size,body_size)),
+                                     retain_graph=True)[0]
+        self.F = torch.zeros(batch_size, body_size, 2, 2)
+        self.F[:, :, 0, 0] = duxdxy[:, :, 0]
+        self.F[:, :, 0, 1] = duxdxy[:, :, 1]
+        self.F[:, :, 1, 0] = duydxy[:, :, 0]
+        self.F[:, :, 1, 1] = duydxy[:, :, 1]
+        self.C = torch.einsum('ijmn, ijmo->ijno', self.F, self.F)
+        self.I1 = torch.einsum('ijkl,ijkl -> ij', self.F,self.F)
         self.I3 = torch.linalg.det(self.C)
         self.J = torch.sqrt(self.I3)
         return self
@@ -55,18 +66,25 @@ class HyperelasticMaterial():
         self.u = u
         self.set_stresses()
         
-        psi = (.25 * self.lam) * (
-                torch.log(self.J**2) - 1 - (2*torch.log(self.J)) + (
-                    (.5 * self.mu) * (torch.einsum('jii',self.C) - 2 - (2*torch.log(self.J)))))
+        # psi = .25*self.lam*(torch.log((self.J)**2) -1 -(2*torch.log(self.J))) \
+        #     + .5 *self.mu *(torch.einsum('ijmm -> ij', self.C) - 2 -(2*torch.log(self.J)))
+
+        psi = (self.mu/2) * (self.I1 - 2) \
+                - (self.mu * (torch.log(self.J))) \
+                + (self.lam/2)*((torch.log(self.J))**2)
+        
+
+        assert torch.all(psi != torch.inf)
         return psi
 
 
 if __name__ == "__main__":
     torch.random.manual_seed(1)
     m = HyperelasticMaterial()
-    X = torch.rand((10,10,2), requires_grad=True)
+    X = torch.rand((100,1000,2), requires_grad=True)
     m.set_body_configuration(X)
-    u = m.deform(torch.square)
+    u = m.deform(lambda x: x)
     energy = m.get_helmholtz_free_energy()
-    print(energy)
+    print(f'# Negative Energy: {len(energy[energy<0].numpy())}')
+    print(f"Mean Energy: {energy.mean().numpy()}")
 # %%
