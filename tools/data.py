@@ -11,14 +11,14 @@ SAMPLE_MAX = 5
 BATCH_SIZE = 160
 
 MATERIAL = HyperelasticMaterial()
-MAX_BODY_SIZE = 200
+BODY_RESOLUTION = 200
 MAX_BODY_SCALE = 10
 
 def target_function(x, y):
     return x * y
 
 def deformation_function(x):
-    return x**3 * torch.sin(x)
+    return x**2
 
 class DataHandler():
     """
@@ -43,6 +43,8 @@ class DataHandler():
         self.snr = snr
         self.batchsize = batchsize
 
+        self.eps = torch.finfo(float).eps
+
         self.reset()
 
     @staticmethod
@@ -58,7 +60,7 @@ class DataHandler():
         """
         n = torch.normal(torch.zeros_like(input_tensor),
                          torch.zeros_like(input_tensor)+(
-                             torch.abs(self.snr*torch.max(input_tensor)))) 
+                            self.snr*torch.max(torch.abs(input_tensor) + self.eps)))
         return input_tensor + n
 
 
@@ -136,14 +138,13 @@ class DataHandler():
     
 
 class MaterialDataHandler(DataHandler):
-    def __init__(self, material=MATERIAL, samples=SAMPLES, max_body_size=MAX_BODY_SIZE,
-                 max_body_scale=MAX_BODY_SCALE,
-                 sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,
+    def __init__(self, material=MATERIAL, samples=SAMPLES, body_resolution=BODY_RESOLUTION,
+                 max_body_scale=MAX_BODY_SCALE, sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,
                  deformation_function=deformation_function, snr=0, batchsize=BATCH_SIZE):
         super().__init__(samples, sample_min, sample_max, deformation_function, snr, batchsize)
 
         self.material = material
-        self.max_body_size = max_body_size
+        self.body_resolution = body_resolution
         self.max_body_scale = max_body_scale
 
 
@@ -153,14 +154,13 @@ class MaterialDataHandler(DataHandler):
         and dependent variables y are generated.
         :return: train_x and train_y.
         """
-        body_size = int(torch.randint(self.max_body_size, ()))
-        body_scale = int(torch.randint(self.max_body_scale, ()))
+        body_scale = int(torch.randint(self.max_body_scale, ())) + 1 
 
-        X = torch.normal(0,1,(self.samples, body_size, 2)) * body_scale
+        X = torch.rand((self.samples, self.body_resolution, 2)) * body_scale + self.eps
         self.material.set_body_configuration(X)
         self.material.deform(deformation_function)
         self.material.set_stresses()
-        train_x = self.material.C.flatten(start_dim=1)
+        train_x = self.material.C.flatten(start_dim=-2)
         train_y = self.material.get_helmholtz_free_energy().unsqueeze(-1)
 
         return train_x, train_y

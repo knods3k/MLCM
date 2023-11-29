@@ -43,9 +43,9 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
                 min_error = error
                 best_lr = lr
                 best_dim = hidden_dim
-            print(f'\t Learning Rate: {lr} \t \t \t Evaluation Error: {error:3e}')
+            print(f'\t Learning Rate: {lr} \t \t Test Error: {error:.2e}')
 
-    print(f'Best Hidden Dimension: {best_dim} \t \t \t Best Learning Rate: {best_lr}')
+    print(f'Best Hidden Dimension: {best_dim} \t \t Best Learning Rate: {best_lr}')
 
     very_best_lr = None
     min_error = float('inf')
@@ -62,7 +62,7 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
         if error < min_error:
             min_error = error
             very_best_lr = lr
-        print(f'\t Learning Rate: {round(lr, ndigits=10)} \t \t \t Evaluation Error: {error:.3e}')
+        print(f'\t Learning Rate: {round(lr, ndigits=10)} \t \t Test Error: {error:.3e}')
 
     print(f'Very Best Learning Rate: {very_best_lr}')
     hyperparams.hidden_dim = best_dim
