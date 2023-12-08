@@ -65,6 +65,7 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
         print(f'\t Learning Rate: {round(lr, ndigits=10)} \t \t Test Error: {error:.3e}')
 
     print(f'Very Best Learning Rate: {very_best_lr}')
+    data_handler.reset()
     hyperparams.hidden_dim = best_dim
     hyperparams.learning_rate = very_best_lr
     hyperparams.epochs = 4*epochs

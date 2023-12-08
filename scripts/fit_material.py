@@ -1,5 +1,5 @@
 #%%
-from tools.settings import DEVICE
+from tools.settings import DEVICE, MACHINE_EPSILON
 from tools.material import HyperelasticMaterial
 from tools.model import MLP
 from tools.data import MaterialDataHandler
@@ -11,19 +11,23 @@ import torch
 import matplotlib.pyplot as plt
 
 MATERIAL = HyperelasticMaterial()
-HIDDEN_DIM = 120
+HIDDEN_DIMS = [10,100]
+INPUT_DIM = 3
 N_LAYERS = 5
-EPOCHS = 1000
-PATIENCE = 100
+EPOCHS = 100
+PATIENCE = 10
 
 
-def deformation_function(X):
-    return X**3 + X**2 + torch.sin(X) + torch.log(X)
+# def default_deformation_function(X):
+#     return X**3 + X**2 + torch.sin(X) + torch.log(X)
+
+# DEFAULT_DEFORMATION_FUNCTION = default_deformation_function
+DEFAULT_DEFORMATION_FUNCTION = 'linear'
 
 
 def fit_material_model(material=MATERIAL, n_layers=N_LAYERS,
                        epochs=EPOCHS, patience=PATIENCE,
-                       deformation_function=deformation_function):
+                       deformation_function=DEFAULT_DEFORMATION_FUNCTION):
     '''
     Train an MLP to predict the Helmholtz Free Energy.
     '''
@@ -31,9 +35,9 @@ def fit_material_model(material=MATERIAL, n_layers=N_LAYERS,
     data_handler = MaterialDataHandler(material=material,
                                        deformation_function=deformation_function)
 
-    hyperparams = Hyperparameters(input_dim=4, n_layers=n_layers)
+    hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=n_layers)
     model = parameter_search(data_handler, hyperparams=hyperparams,
-                     epochs=epochs, patience=patience)
+                     epochs=epochs, patience=patience, hidden_dimensions=HIDDEN_DIMS)
 
 
     return model
@@ -60,12 +64,11 @@ def test_material_model(model, material=MATERIAL):
         x = material.x
 
         energy_true = material.get_helmholtz_free_energy()
-        deformation_tensor = material.C.flatten(start_dim=-2)
-        energy_predicted = model((deformation_tensor).to(DEVICE)).cpu().squeeze()
+        input_data = material.get_invariant_deviations()
+        energy_predicted = model((input_data).to(DEVICE)).cpu().squeeze()
 
-        eps = torch.finfo(float).eps
-        energy_predicted += eps
-        energy_true += eps
+        energy_predicted += MACHINE_EPSILON
+        energy_true += MACHINE_EPSILON
         relative_error = torch.exp(torch.log(energy_predicted/energy_true).abs().mean()) -1
         relative_error = relative_error.mean().detach().numpy()
         relative_error *= 100
