@@ -44,7 +44,11 @@ class HyperelasticMaterial():
         self.F[:, :, 1, 1] = duydxy[:, :, 1]
         self.C = torch.einsum('ijmn, ijmo->ijno', self.F, self.F)
         self.I1 = torch.einsum('ijkl,ijkl -> ij', self.F,self.F)
+        self.I2 = .5 * ((self.I1**2) - (torch.einsum('ijkl,ijkl -> ij', self.C, self.C)))
         self.I3 = torch.linalg.det(self.C)
+        self.I1_deviation = self.I1 - 2
+        self.I2_deviation = self.I2 - 2
+        self.I3_deviation = self.I1 - 1
         self.J = torch.sqrt(self.I3)
         return self
         
@@ -76,6 +80,11 @@ class HyperelasticMaterial():
 
         assert torch.all(psi != torch.inf)
         return psi
+    
+    def get_invariant_deviations(self):
+        return torch.stack((self.I1_deviation,
+                               self.I2_deviation,
+                               self.I3_deviation), axis=-1)
 
 
 if __name__ == "__main__":
