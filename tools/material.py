@@ -44,6 +44,7 @@ class HyperelasticMaterial():
         self.F[:, :, 1, 1] = duydxy[:, :, 1]
         self.C = torch.einsum('ijmn, ijmo->ijno', self.F, self.F)
         self.I1 = torch.einsum('ijkl,ijkl -> ij', self.F,self.F)
+        self.I2 = .5 * ((self.I1**2) - (torch.einsum('ijkl,ijkl -> ij', self.C, self.C)))
         self.I3 = torch.linalg.det(self.C)
         self.J = torch.sqrt(self.I3)
         return self

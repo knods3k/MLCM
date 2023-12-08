@@ -1,8 +1,11 @@
 #%%
+import sys
+sys.path.append('')
 from tools.material import HyperelasticMaterial
 
 import torch
 from torch.utils.data import TensorDataset, DataLoader
+from tools.settings import MACHINE_EPSILON
 
 SAMPLES = 160
 SAMPLE_MIN = -5
@@ -17,8 +20,9 @@ MAX_BODY_SCALE = 10
 def target_function(x, y):
     return x * y
 
-def deformation_function(x):
+def default_deformation_function(x):
     return x**2
+
 
 class DataHandler():
     """
@@ -43,8 +47,6 @@ class DataHandler():
         self.snr = snr
         self.batchsize = batchsize
 
-        self.eps = torch.finfo(float).eps
-
         self.reset()
 
     @staticmethod
@@ -60,7 +62,7 @@ class DataHandler():
         """
         n = torch.normal(torch.zeros_like(input_tensor),
                          torch.zeros_like(input_tensor)+(
-                            self.snr*torch.max(torch.abs(input_tensor) + self.eps)))
+                            self.snr*torch.max(torch.abs(input_tensor) + MACHINE_EPSILON)))
         return input_tensor + n
 
 
@@ -140,12 +142,48 @@ class DataHandler():
 class MaterialDataHandler(DataHandler):
     def __init__(self, material=MATERIAL, samples=SAMPLES, body_resolution=BODY_RESOLUTION,
                  max_body_scale=MAX_BODY_SCALE, sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,
-                 deformation_function=deformation_function, snr=0, batchsize=BATCH_SIZE):
+                 deformation_function=None, snr=0, batchsize=BATCH_SIZE):
         super().__init__(samples, sample_min, sample_max, deformation_function, snr, batchsize)
 
         self.material = material
         self.body_resolution = body_resolution
         self.max_body_scale = max_body_scale
+
+        self.linear_coefficient = torch.tensor([1.])
+        self.polynomial_coefficients = torch.tensor([1., 2., 3., 4.])
+        self.deformation_function = deformation_function
+        self.build_deformation_function()
+
+        self.normalize()
+
+    @staticmethod
+    def random_linear_deformation(x):
+        linear_coefficient = torch.randint(MACHINE_EPSILON)
+        return linear_coefficient * x
+
+    @staticmethod
+    def random_polynomial_deformation(self, x):
+        degree = int(torch.randint(0, 20, size=()))
+        exponents = torch.arange(len(self.polynomial_coefficients))
+        self.polynomial_coefficients = torch.rand()
+        return (torch.pow(x.unsqueeze(-1), exponents)*self.polynomial_coefficients).sum(-1)
+    
+    def normalize(self):
+        self.normalizing_constant_out = 1.
+        self.normalizing_constant_in = 1.
+        x, y = self.get_test_data()
+        self.normalizing_constant_in = x.max()
+        self.normalizing_constant_out = y.max()
+    
+    def build_deformation_function(self):
+        if self.deformation_function is None:
+            self.deformation_function = default_deformation_function
+        
+        if self.deformation_function == 'linear':
+            self.deformation_function = self.linear_deformation
+
+        if self.deformation_function == 'polynomial':
+            self.deformation_function = self.polynomial_deformation
 
 
     def get_test_data(self):
@@ -156,12 +194,18 @@ class MaterialDataHandler(DataHandler):
         """
         body_scale = int(torch.randint(self.max_body_scale, ())) + 1 
 
-        X = torch.rand((self.samples, self.body_resolution, 2)) * body_scale + self.eps
+        X = torch.rand((self.samples, self.body_resolution, 2)) * body_scale + MACHINE_EPSILON
         self.material.set_body_configuration(X)
-        self.material.deform(deformation_function)
+        self.material.deform(self.deformation_function)
         self.material.set_stresses()
-        train_x = self.material.C.flatten(start_dim=-2)
+        I1_deviation = self.material.I1 - 2
+        I2_deviation = self.material.I2 - 2
+        I3_deviation = self.material.I1 - 1
+        train_x = torch.stack((I1_deviation, I2_deviation, I3_deviation), axis=-1)
         train_y = self.material.get_helmholtz_free_energy().unsqueeze(-1)
+
+        train_x /= self.normalizing_constant_in
+        train_y /= self.normalizing_constant_out
 
         return train_x, train_y
 

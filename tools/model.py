@@ -1,6 +1,4 @@
 #%%
-import sys
-sys.path.append('')
 from tools.data import MaterialDataHandler
 
 import torch
@@ -72,7 +70,7 @@ class MLP(Model):
 
 
 class CANN(Model):
-    def __init__(self, *args, input_dim=4, polynomial_degree=10, alpha=1e-16, **kwargs):
+    def __init__(self, *args, input_dim=3, polynomial_degree=3, alpha=0, **kwargs):
         super(CANN, self).__init__(*args, **kwargs)
         self.hyperparams.input_dim = input_dim
         self.exponents = torch.arange(int(polynomial_degree))
@@ -135,7 +133,7 @@ if __name__ == "__main__":
     mdata = MaterialDataHandler()
     x, y = mdata.get_training_data()
     model = CANN()
-    model(x)
+    print(model(x))
 
 
         
