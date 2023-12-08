@@ -1,6 +1,4 @@
 #%%
-import sys
-sys.path.append('')
 from tools.material import HyperelasticMaterial
 
 import torch
