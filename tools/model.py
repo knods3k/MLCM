@@ -1,8 +1,14 @@
+#%%
+import sys
+sys.path.append('')
+from tools.data import MaterialDataHandler
+
 import torch
 import torch.nn as nn
 from tools.hyperparameters import Hyperparameters
 from tools.training import start_training, start_evaluation
 from tools.settings import DEVICE
+
 
 
 HYPERPARAMS = Hyperparameters()
@@ -63,3 +69,75 @@ class MLP(Model):
         for layer in self.layers:
             input_data = layer(input_data)
         return input_data
+
+
+class CANN(Model):
+    def __init__(self, *args, input_dim=4, polynomial_degree=10, alpha=1e-16, **kwargs):
+        super(CANN, self).__init__(*args, **kwargs)
+        self.hyperparams.input_dim = input_dim
+        self.exponents = torch.arange(int(polynomial_degree))
+
+        self.activation_functions = self.BuildActivationFunctions()
+
+        self.layers = []
+
+        self.layers.append(self.FirstLayer)
+        self.layers.append(self.SecondLayer)
+        self.layers.append(nn.Linear(int(
+            self.hyperparams.input_dim * polynomial_degree * len(self.activation_functions)),
+            1))
+
+        self.alpha = alpha
+    
+    @staticmethod
+    def linear_activation(x):
+        return torch.pow(x, 1)
+    
+    @staticmethod
+    def quadratic_activation(x):
+        return torch.pow(x, 2)
+    
+    def linear_exponential(self, x):
+        return torch.exp(self.alpha * x) - 1
+    
+    def quadratic_exponential(self, x):
+        return torch.exp(self.alpha*(x**2)) - 1
+    
+    def FirstLayer(self, input_data):
+        return torch.pow(input_data.unsqueeze(-1), self.exponents)
+    
+    def BuildActivationFunctions(self):
+        functions = []
+        functions.append(self.linear_activation)
+        functions.append(self.quadratic_activation)
+        functions.append(self.linear_exponential)
+        functions.append(self.quadratic_exponential)
+        return functions
+    
+    def SecondLayer(self, input_data):
+        activations = [a(input_data).flatten(-2) for a in self.activation_functions]
+        return torch.cat(activations, axis=-1)
+    
+
+    def forward(self, input_data):
+        """
+        Forward pass of the network.
+        :param input_data:
+        :return: input_data passed through the network.
+        """
+        for layer in self.layers:
+            input_data = layer(input_data)
+        return input_data
+
+        
+        
+if __name__ == "__main__":
+    mdata = MaterialDataHandler()
+    x, y = mdata.get_training_data()
+    model = CANN()
+    model(x)
+
+
+        
+        
+# %%
