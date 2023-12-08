@@ -49,32 +49,22 @@ class HyperelasticMaterial():
         return self
         
 
-    def get_helmholtz_free_energy(self, X=None, u=None):
+    def get_helmholtz_free_energy(self):
         '''
         :param X: Reference locations (N_samplepoints x N_dimensions)
         :param u: Displacements (N_samplepoints x N_dimensions)
 
         :returns: Helmholtz free energy
         '''
-        if X is None:
-            X = self.X
-        if u is None:
-            u = self.u
-        if not X.requires_grad:
-            raise TypeError(f"X.requires_grad={X.requires_grad}, needs to be True")
-        self.set_body_configuration(X)
-        self.u = u
+        self.set_body_configuration(self.X)
         self.set_stresses()
         
-        # psi = .25*self.lam*(torch.log((self.J)**2) -1 -(2*torch.log(self.J))) \
-        #     + .5 *self.mu *(torch.einsum('ijmm -> ij', self.C) - 2 -(2*torch.log(self.J)))
-
         psi = (self.mu/2) * (self.I1 - 2) \
                 - (self.mu * (torch.log(self.J))) \
                 + (self.lam/2)*((torch.log(self.J))**2)
         
 
-        assert torch.all(psi != torch.inf)
+        # assert torch.all(psi != torch.inf) and torch.all(psi >= 0)
         return psi
 
 
