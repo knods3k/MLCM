@@ -13,7 +13,7 @@ BATCH_SIZE = 160
 
 MATERIAL = HyperelasticMaterial()
 BODY_RESOLUTION = 200
-MAX_BODY_SCALE = 10
+MAX_BODY_SCALE = 3
 
 def target_function(x, y):
     return x * y
@@ -153,18 +153,6 @@ class MaterialDataHandler(DataHandler):
         self.build_deformation_function()
 
         self.normalize()
-
-    @staticmethod
-    def random_linear_deformation(x):
-        linear_coefficient = torch.randint(MACHINE_EPSILON)
-        return linear_coefficient * x
-
-    @staticmethod
-    def random_polynomial_deformation(self, x):
-        degree = int(torch.randint(0, 20, size=()))
-        exponents = torch.arange(len(self.polynomial_coefficients))
-        self.polynomial_coefficients = torch.rand()
-        return (torch.pow(x.unsqueeze(-1), exponents)*self.polynomial_coefficients).sum(-1)
     
     def normalize(self):
         self.normalizing_constant_out = 1.
@@ -172,16 +160,30 @@ class MaterialDataHandler(DataHandler):
         x, y = self.get_test_data()
         self.normalizing_constant_in = x.max()
         self.normalizing_constant_out = y.max()
+
+    @staticmethod
+    def random_linear_deformation(x):
+        linear_coefficient = torch.rand(()) * torch.randint(0, 2, size=()) + .1
+        return linear_coefficient * x
+
+    @staticmethod
+    def random_polynomial_deformation(x):
+        degree = int(torch.randint(0, 20, size=()))
+        exponents = torch.arange(degree)
+        polynomial_coefficients = 1/torch.exp(torch.lgamma(exponents))
+        polynomial_coefficients *= torch.rand(size=exponents.shape) 
+        polynomial_coefficients += .1
+        return (torch.pow(x.unsqueeze(-1), exponents)*polynomial_coefficients).sum(-1)
     
     def build_deformation_function(self):
         if self.deformation_function is None:
             self.deformation_function = default_deformation_function
         
         if self.deformation_function == 'linear':
-            self.deformation_function = self.linear_deformation
+            self.deformation_function = self.random_linear_deformation
 
         if self.deformation_function == 'polynomial':
-            self.deformation_function = self.polynomial_deformation
+            self.deformation_function = self.random_polynomial_deformation
 
 
     def get_test_data(self):
@@ -195,11 +197,7 @@ class MaterialDataHandler(DataHandler):
         X = torch.rand((self.samples, self.body_resolution, 2)) * body_scale + MACHINE_EPSILON
         self.material.set_body_configuration(X)
         self.material.deform(self.deformation_function)
-        self.material.set_stresses()
-        I1_deviation = self.material.I1 - 2
-        I2_deviation = self.material.I2 - 2
-        I3_deviation = self.material.I1 - 1
-        train_x = torch.stack((I1_deviation, I2_deviation, I3_deviation), axis=-1)
+        train_x = self.material.get_invariant_deviations()
         train_y = self.material.get_helmholtz_free_energy().unsqueeze(-1)
 
         train_x /= self.normalizing_constant_in
