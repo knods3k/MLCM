@@ -37,6 +37,7 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
             hyperparams.epochs = epochs
             model = MLP(hyperparams=hyperparams)
             model.start_training(data_handler, verbosity=0, patience=patience)
+            data_handler.reset()
             _,_, testlosses = model.start_evaluation(data_handler)
             error = min(testlosses)
             if error < min_error:
@@ -57,6 +58,7 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
         hyperparams.epochs = 2*epochs
         model = MLP(hyperparams=hyperparams)
         model.start_training(data_handler, verbosity=0, patience=patience)
+        data_handler.reset()
         _,_, testlosses = model.start_evaluation(data_handler)
         error = min(testlosses)
         if error < min_error:
@@ -71,6 +73,7 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
     hyperparams.epochs = 4*epochs
     model = MLP(hyperparams=hyperparams)
     model.start_training(data_handler, verbosity=0, patience=patience)
+    data_handler.reset()
     _,_, testlosses = model.start_evaluation(data_handler)
     error = min(testlosses)
     print(f'\t Learning Rate: {round(very_best_lr, ndigits=10)} \t \t Test Error: {error:.3e}')

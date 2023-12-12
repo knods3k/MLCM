@@ -50,9 +50,9 @@ def test_material_model(model, data_handler, material=MATERIAL):
     d_functions = {
         '1x': lambda x: incompressible(x, 1),
         '2x': lambda x: incompressible(x, 2),
+        '5': lambda x: incompressible(x, 5),
         '10x': lambda x: incompressible(x, 10),
-        '100x': lambda x: incompressible(x, 100),
-        '1000x': lambda x: incompressible(x, 1000),
+        '20x': lambda x: incompressible(x, 20),
         # '1.0x': lambda x: 1.*x,
         # '1.1x': lambda x: 1.1*x,
         # '2.0x': lambda x: 2.*x,
@@ -98,9 +98,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
     return model
 
 if __name__ == "__main__":
-    # model, data_handler = fit_material_model()
+    model, data_handler = fit_material_model()
     test_material_model(model, data_handler)
 
 # %%
-
-    # %%

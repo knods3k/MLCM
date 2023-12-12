@@ -14,6 +14,7 @@ BATCH_SIZE = 160
 MATERIAL = HyperelasticMaterial()
 BODY_RESOLUTION = 200
 MAX_BODY_SCALE = 3
+DEFORMATION_SCALE = 10
 
 def target_function(x, y):
     return x * y
@@ -149,9 +150,8 @@ class DataHandler():
 
 class MaterialDataHandler(DataHandler):
     def __init__(self, material=MATERIAL, samples=SAMPLES, body_resolution=BODY_RESOLUTION,
-                 max_body_scale=MAX_BODY_SCALE, sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,
-                 deformation_function=None, snr=0, batchsize=BATCH_SIZE):
-        super().__init__(samples, sample_min, sample_max, deformation_function, snr, batchsize)
+                 max_body_scale=MAX_BODY_SCALE, deformation_function=None, snr=0, batchsize=BATCH_SIZE):
+        super().__init__(samples, deformation_function, snr, batchsize)
 
         self.material = material
         self.body_resolution = body_resolution
@@ -188,7 +188,7 @@ class MaterialDataHandler(DataHandler):
     @staticmethod
     def random_incompressible_deformation(x):
         dimension = x.shape[-1]
-        A = torch.normal(0,1,(dimension,dimension))
+        A = torch.normal(0,DEFORMATION_SCALE,(dimension,dimension))
         A = torch.abs(A)
         A = torch.triu(A)
         A[0,0] /= torch.prod(torch.diag(A))
