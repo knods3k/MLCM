@@ -14,6 +14,7 @@ BATCH_SIZE = 160
 MATERIAL = HyperelasticMaterial()
 BODY_RESOLUTION = 200
 MAX_BODY_SCALE = 3
+DEFORMATION_SCALE = 10
 
 def target_function(x, y):
     return x * y
@@ -50,6 +51,12 @@ class DataHandler():
     @staticmethod
     def reset():
         torch.random.manual_seed(1)
+    
+    def __len__(self):
+        return self.batchsize
+    
+    def __getitem__(self, idx):
+        return self.get_training_data()
 
 
     def noise(self, input_tensor):
@@ -127,6 +134,10 @@ class DataHandler():
         tensor_dataset = self.get_tensor_dataset()
         return DataLoader(tensor_dataset, shuffle=True,
                           batch_size=self.batchsize, drop_last=False)
+    
+    def get_data_generator(self):
+        yield self.get_training_data()
+
 
 
     def get(self):
@@ -139,9 +150,8 @@ class DataHandler():
 
 class MaterialDataHandler(DataHandler):
     def __init__(self, material=MATERIAL, samples=SAMPLES, body_resolution=BODY_RESOLUTION,
-                 max_body_scale=MAX_BODY_SCALE, sample_min=SAMPLE_MIN, sample_max=SAMPLE_MAX,
-                 deformation_function=None, snr=0, batchsize=BATCH_SIZE):
-        super().__init__(samples, sample_min, sample_max, deformation_function, snr, batchsize)
+                 max_body_scale=MAX_BODY_SCALE, deformation_function=None, snr=0, batchsize=BATCH_SIZE):
+        super().__init__(samples, deformation_function, snr, batchsize)
 
         self.material = material
         self.body_resolution = body_resolution
@@ -175,6 +185,16 @@ class MaterialDataHandler(DataHandler):
         polynomial_coefficients += .1
         return (torch.pow(x.unsqueeze(-1), exponents)*polynomial_coefficients).sum(-1)
     
+    @staticmethod
+    def random_incompressible_deformation(x):
+        dimension = x.shape[-1]
+        A = torch.normal(0,DEFORMATION_SCALE,(dimension,dimension))
+        A = torch.abs(A)
+        A = torch.triu(A)
+        A[0,0] /= torch.prod(torch.diag(A))
+        return x @ A
+
+    
     def build_deformation_function(self):
         if self.deformation_function is None:
             self.deformation_function = default_deformation_function
@@ -184,6 +204,9 @@ class MaterialDataHandler(DataHandler):
 
         if self.deformation_function == 'polynomial':
             self.deformation_function = self.random_polynomial_deformation
+
+        if self.deformation_function == 'incompressible':
+            self.deformation_function = self.random_incompressible_deformation
 
 
     def get_test_data(self):
@@ -216,6 +239,9 @@ class MaterialDataHandler(DataHandler):
         train_y = self.noise(train_y)
 
         return train_x, train_y
+    
+    def get(self):
+        return DataLoader(self, batch_size=self.batchsize)
 
 
 if __name__ == "__main__":
