@@ -1,6 +1,5 @@
 #%%
-import sys
-sys.path.append('..')
+import scripts.scriptsettings
 from tools.settings import DEVICE, MACHINE_EPSILON
 from tools.material import HyperelasticMaterial
 from tools.model import MLP
@@ -13,10 +12,10 @@ import torch
 import matplotlib.pyplot as plt
 
 MATERIAL = HyperelasticMaterial()
-HIDDEN_DIMS = [1000]
+HIDDEN_DIMS = [10, 20, 30, 40]
 INPUT_DIM = 3
 N_LAYERS = 5
-EPOCHS = 1000
+EPOCHS = 250
 PATIENCE = 10
 
 
@@ -24,7 +23,7 @@ PATIENCE = 10
 #     return X**3 + X**2 + torch.sin(X) + torch.log(X)
 
 # DEFAULT_DEFORMATION_FUNCTION = default_deformation_function
-DEFAULT_DEFORMATION_FUNCTION = 'linear'
+DEFAULT_DEFORMATION_FUNCTION = 'incompressible'
 
 
 def fit_material_model(material=MATERIAL, n_layers=N_LAYERS,
@@ -36,17 +35,17 @@ def fit_material_model(material=MATERIAL, n_layers=N_LAYERS,
     torch.random.manual_seed(1)
     data_handler = MaterialDataHandler(material=material,
                                        deformation_function=deformation_function,
-                                       max_body_scale=1)
+                                       max_body_scale=1, batchsize=16, samples=1, body_resolution=10)
 
     hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=n_layers)
     model = parameter_search(data_handler, hyperparams=hyperparams,
                      epochs=epochs, patience=patience, hidden_dimensions=HIDDEN_DIMS)
 
 
-    return model
+    return model, data_handler
     
 
-def test_material_model(model, material=MATERIAL):
+def test_material_model(model, data_handler, material=MATERIAL):
     incompressible = lambda x, factor: torch.stack([factor*x[:,:,0], 1/factor*x[:,:,1]], axis=-1)
     d_functions = {
         '1x': lambda x: incompressible(x, 1),
@@ -68,7 +67,7 @@ def test_material_model(model, material=MATERIAL):
         torch.random.manual_seed(1)
         test_body_size = 1000
         n_test_bodies = 10
-        scale_test_bodies = 1.
+        scale_test_bodies = 100.
         X = torch.rand((n_test_bodies,test_body_size,2), requires_grad=True)*scale_test_bodies
         material.set_body_configuration(X)
         u = material.deform(function)
@@ -76,8 +75,10 @@ def test_material_model(model, material=MATERIAL):
 
         energy_true = material.get_helmholtz_free_energy()
         input_data = material.get_invariant_deviations()
+        input_data /= data_handler.normalizing_constant_in
         energy_predicted = model((input_data).to(DEVICE)).cpu().squeeze()
 
+        energy_predicted *= data_handler.normalizing_constant_out
         energy_predicted += MACHINE_EPSILON
         energy_true += MACHINE_EPSILON
         relative_error = torch.exp(torch.log(energy_predicted/energy_true).abs().mean()) -1
@@ -97,7 +98,9 @@ def test_material_model(model, material=MATERIAL):
     return model
 
 if __name__ == "__main__":
-    model = fit_material_model()
-    test_material_model(model)
+    # model, data_handler = fit_material_model()
+    test_material_model(model, data_handler)
+
+# %%
 
     # %%

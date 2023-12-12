@@ -50,6 +50,12 @@ class DataHandler():
     @staticmethod
     def reset():
         torch.random.manual_seed(1)
+    
+    def __len__(self):
+        return self.batchsize
+    
+    def __getitem__(self, idx):
+        return self.get_training_data()
 
 
     def noise(self, input_tensor):
@@ -127,6 +133,10 @@ class DataHandler():
         tensor_dataset = self.get_tensor_dataset()
         return DataLoader(tensor_dataset, shuffle=True,
                           batch_size=self.batchsize, drop_last=False)
+    
+    def get_data_generator(self):
+        yield self.get_training_data()
+
 
 
     def get(self):
@@ -175,6 +185,16 @@ class MaterialDataHandler(DataHandler):
         polynomial_coefficients += .1
         return (torch.pow(x.unsqueeze(-1), exponents)*polynomial_coefficients).sum(-1)
     
+    @staticmethod
+    def random_incompressible_deformation(x):
+        dimension = x.shape[-1]
+        A = torch.normal(0,1,(dimension,dimension))
+        A = torch.abs(A)
+        A = torch.triu(A)
+        A[0,0] /= torch.prod(torch.diag(A))
+        return x @ A
+
+    
     def build_deformation_function(self):
         if self.deformation_function is None:
             self.deformation_function = default_deformation_function
@@ -184,6 +204,9 @@ class MaterialDataHandler(DataHandler):
 
         if self.deformation_function == 'polynomial':
             self.deformation_function = self.random_polynomial_deformation
+
+        if self.deformation_function == 'incompressible':
+            self.deformation_function = self.random_incompressible_deformation
 
 
     def get_test_data(self):
@@ -216,6 +239,9 @@ class MaterialDataHandler(DataHandler):
         train_y = self.noise(train_y)
 
         return train_x, train_y
+    
+    def get(self):
+        return DataLoader(self, batch_size=self.batchsize)
 
 
 if __name__ == "__main__":
