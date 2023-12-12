@@ -1,4 +1,6 @@
 #%%
+import sys
+sys.path.append('..')
 from tools.settings import DEVICE, MACHINE_EPSILON
 from tools.material import HyperelasticMaterial
 from tools.model import MLP
@@ -11,10 +13,10 @@ import torch
 import matplotlib.pyplot as plt
 
 MATERIAL = HyperelasticMaterial()
-HIDDEN_DIMS = [10,100]
+HIDDEN_DIMS = [1000]
 INPUT_DIM = 3
 N_LAYERS = 5
-EPOCHS = 100
+EPOCHS = 1000
 PATIENCE = 10
 
 
@@ -33,7 +35,8 @@ def fit_material_model(material=MATERIAL, n_layers=N_LAYERS,
     '''
     torch.random.manual_seed(1)
     data_handler = MaterialDataHandler(material=material,
-                                       deformation_function=deformation_function)
+                                       deformation_function=deformation_function,
+                                       max_body_scale=1)
 
     hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=n_layers)
     model = parameter_search(data_handler, hyperparams=hyperparams,
@@ -44,13 +47,21 @@ def fit_material_model(material=MATERIAL, n_layers=N_LAYERS,
     
 
 def test_material_model(model, material=MATERIAL):
+    incompressible = lambda x, factor: torch.stack([factor*x[:,:,0], 1/factor*x[:,:,1]], axis=-1)
     d_functions = {
-        '1.1x': lambda x: 1.1*x,
-        '100x': lambda x: 100.*x,
-        'Sqaure': torch.square,
-        'Root': torch.sqrt,
-        'Exp.': torch.exp,
-        'Log.': torch.log
+        '1x': lambda x: incompressible(x, 1),
+        '2x': lambda x: incompressible(x, 2),
+        '10x': lambda x: incompressible(x, 10),
+        '100x': lambda x: incompressible(x, 100),
+        '1000x': lambda x: incompressible(x, 1000),
+        # '1.0x': lambda x: 1.*x,
+        # '1.1x': lambda x: 1.1*x,
+        # '2.0x': lambda x: 2.*x,
+        # '100x': lambda x: 100.*x,
+        # 'Sqaure': torch.square,
+        # 'Root': torch.sqrt,
+        # 'Exp.': torch.exp,
+        # 'Log.': torch.log
     }
     print('\n\n\n')
     for func_name, function in d_functions.items():
