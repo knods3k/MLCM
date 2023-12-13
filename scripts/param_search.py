@@ -1,4 +1,5 @@
 #%%
+import pathsettings
 from tools.data import DataHandler
 from tools.hyperparameters import Hyperparameters
 from tools.model import MLP
@@ -10,19 +11,20 @@ LEARNING_RATES = [.1, .01, .001, .0001, .00001]
 ADJUST_LEARNING_RATES = [.1, .3, .5, .7 , 1., 2., 3., 4.]
 HIDDEN_DIMENSIONS = [8, 16, 32, 64, 128]
 
-EPOCHS = 500
+EPOCHS = 1
 PATIENCE = 50
 
 SNR = 1.
 
 DATA_HANDLER = DataHandler(snr=SNR)
 HYPERPARAMS = Hyperparameters()
+MODEL = MLP(hyperparams=HYPERPARAMS)
 
 
-def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
+def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
                      adjust_learning_rates=ADJUST_LEARNING_RATES,
                      hidden_dimensions=HIDDEN_DIMENSIONS, epochs=EPOCHS, patience=PATIENCE,
-                     hyperparams=HYPERPARAMS, modelfile=MODELFILE):
+                     modelfile=MODELFILE):
 
 
     best_lr = None
@@ -32,10 +34,11 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
         print(f'Hidden Dimension: {hidden_dim}')
         for lr in learning_rates:
             data_handler.reset()
-            hyperparams.hidden_dim=hidden_dim
-            hyperparams.learning_rate = lr
-            hyperparams.epochs = epochs
-            model = MLP(hyperparams=hyperparams)
+            model = initial_model
+            model.hyperparams.hidden_dim=hidden_dim
+            model.hyperparams.learning_rate = lr
+            model.hyperparams.epochs = epochs
+            model.build()
             model.start_training(data_handler, verbosity=0, patience=patience)
             data_handler.reset()
             _,_, testlosses = model.start_evaluation(data_handler)
@@ -53,10 +56,11 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
     for adjust_lr in adjust_learning_rates:
         data_handler.reset()
         lr = best_lr * adjust_lr
-        hyperparams.hidden_dim = best_dim
-        hyperparams.learning_rate = lr
-        hyperparams.epochs = 2*epochs
-        model = MLP(hyperparams=hyperparams)
+        model = initial_model
+        model.hyperparams.hidden_dim=hidden_dim
+        model.hyperparams.learning_rate = lr
+        model.hyperparams.epochs = epochs
+        model.build()
         model.start_training(data_handler, verbosity=0, patience=patience)
         data_handler.reset()
         _,_, testlosses = model.start_evaluation(data_handler)
@@ -68,10 +72,11 @@ def parameter_search(data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
 
     print(f'Very Best Learning Rate: {very_best_lr}')
     data_handler.reset()
-    hyperparams.hidden_dim = best_dim
-    hyperparams.learning_rate = very_best_lr
-    hyperparams.epochs = 4*epochs
-    model = MLP(hyperparams=hyperparams)
+    model = initial_model
+    model.hyperparams.hidden_dim=hidden_dim
+    model.hyperparams.learning_rate = lr
+    model.hyperparams.epochs = epochs
+    model.build()
     model.start_training(data_handler, verbosity=0, patience=patience)
     data_handler.reset()
     _,_, testlosses = model.start_evaluation(data_handler)

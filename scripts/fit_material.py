@@ -1,5 +1,5 @@
 #%%
-import scripts.scriptsettings
+import pathsettings
 from tools.settings import DEVICE, MACHINE_EPSILON
 from tools.material import HyperelasticMaterial
 from tools.model import MLP
@@ -35,11 +35,13 @@ def fit_material_model(material=MATERIAL, n_layers=N_LAYERS,
     torch.random.manual_seed(1)
     data_handler = MaterialDataHandler(material=material,
                                        deformation_function=deformation_function,
-                                       max_body_scale=1, batchsize=16, samples=1, body_resolution=10)
+                                       max_body_scale=1, batchsize=16, samples=1,
+                                       body_resolution=10)
 
     hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=n_layers)
-    model = parameter_search(data_handler, hyperparams=hyperparams,
-                     epochs=epochs, patience=patience, hidden_dimensions=HIDDEN_DIMS)
+    model = MLP(hyperparams=hyperparams)
+    model = parameter_search(model, data_handler, epochs=epochs, patience=patience,
+                             hidden_dimensions=HIDDEN_DIMS)
 
 
     return model, data_handler
