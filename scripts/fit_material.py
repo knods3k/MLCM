@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 def emale(true, pred):
     return torch.exp(
-        torch.log(true/pred).abs().mean()
+        torch.log(true/pred).mean()
         ).detach().cpu()
 
 MATERIAL = HyperelasticMaterial()
