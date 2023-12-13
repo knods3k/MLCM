@@ -1,10 +1,11 @@
 #%%
+import pathsettings
 from tools.model import MLP
 from tools.hyperparameters import Hyperparameters
 from tools.data import DataHandler
 from tools.plotting import eval_and_plot
 
-EPOCHS = 2000
+EPOCHS = 1
 LEARNING_RATE = .0005
 SNR = 1.
 DATA_HANDLER = DataHandler(snr=SNR)

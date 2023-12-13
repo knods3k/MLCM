@@ -1,5 +1,7 @@
 #%%
+import pathsettings
 from tools.data import DataHandler
+from tools.model import MLP
 import torch
 
 SNR = 1.
@@ -7,10 +9,10 @@ DATA_HANDLER = DataHandler(snr=SNR)
 
 
 MODELFILE = "mymodel.torch"
-INITIAL_MODEL = torch.load(MODELFILE)
+INITIAL_MODEL = MLP()
 LAMBDAS = [9., 5., 1., .5, .1, 0.]
 LEARNING_RATES = [.1, .01, .001, .0001, .00001]
-EPOCHS = 500
+EPOCHS = 1
 PATIENCE = 50
 
 ADJUST_LEARNING_RATES = [.1, .3, .5, .7 , 1., 2., 3., 4.]
