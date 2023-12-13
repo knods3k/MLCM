@@ -12,7 +12,7 @@ MODELFILE = "mymodel.torch"
 INITIAL_MODEL = MLP()
 LAMBDAS = [9., 5., 1., .5, .1, 0.]
 LEARNING_RATES = [.1, .01, .001, .0001, .00001]
-EPOCHS = 1
+EPOCHS = 500
 PATIENCE = 50
 
 ADJUST_LEARNING_RATES = [.1, .3, .5, .7 , 1., 2., 3., 4.]
