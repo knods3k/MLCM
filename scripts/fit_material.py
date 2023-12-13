@@ -11,6 +11,11 @@ from scripts.param_search import parameter_search
 import torch
 import matplotlib.pyplot as plt
 
+def emale(true, pred):
+    return torch.exp(
+        torch.log(true/pred).abs().mean()
+        ).detach().cpu()
+
 MATERIAL = HyperelasticMaterial()
 HIDDEN_DIMS = [10, 20, 30, 40]
 INPUT_DIM = 3
@@ -18,11 +23,6 @@ N_LAYERS = 5
 EPOCHS = 250
 PATIENCE = 10
 
-
-# def default_deformation_function(X):
-#     return X**3 + X**2 + torch.sin(X) + torch.log(X)
-
-# DEFAULT_DEFORMATION_FUNCTION = default_deformation_function
 DEFAULT_DEFORMATION_FUNCTION = 'incompressible'
 
 
@@ -50,10 +50,10 @@ def test_material_model(model, data_handler, material=MATERIAL):
     d_functions = {
         '1x': lambda x: incompressible(x, 1),
         '2x': lambda x: incompressible(x, 2),
-        '5': lambda x: incompressible(x, 5),
         '10x': lambda x: incompressible(x, 10),
-        '20x': lambda x: incompressible(x, 20),
-        # '1.0x': lambda x: 1.*x,
+        'A1x': data_handler.random_incompressible_deformation,
+        'A2x': data_handler.random_incompressible_deformation,
+        'A3x': data_handler.random_incompressible_deformation,
         # '1.1x': lambda x: 1.1*x,
         # '2.0x': lambda x: 2.*x,
         # '100x': lambda x: 100.*x,
@@ -63,8 +63,8 @@ def test_material_model(model, data_handler, material=MATERIAL):
         # 'Log.': torch.log
     }
     print('\n\n\n')
+    torch.random.manual_seed(1)
     for func_name, function in d_functions.items():
-        torch.random.manual_seed(1)
         test_body_size = 1000
         n_test_bodies = 10
         scale_test_bodies = 100.
@@ -81,20 +81,16 @@ def test_material_model(model, data_handler, material=MATERIAL):
         energy_predicted *= data_handler.normalizing_constant_out
         energy_predicted += MACHINE_EPSILON
         energy_true += MACHINE_EPSILON
-        relative_error = torch.exp(torch.log(energy_predicted/energy_true).abs().mean()) -1
-        relative_error = relative_error.mean().detach().numpy()
-        relative_error *= 100
+        error = emale(energy_true, energy_predicted.detach().cpu().numpy())
 
         body = X[0].detach().cpu().numpy()
         deformed = x[0].detach().cpu().numpy()
-        plt.xlabel(f"\nDeformation Function: {func_name} \n Mean Relative Error: {relative_error:2.5}%")
+        plt.xlabel(f"\nDeformation Function: {func_name} \n eMALE: {error:2.5}")
         plt.title(f'(Predicted) {energy_predicted.mean():.3} : {energy_true.mean():.3} (True)')
         plt.scatter(body[:,0], body[:,1], c='w', label='Original')
         plt.scatter(deformed[:,0], deformed[:,1], c='r', label='Deformed')
         plt.legend()
         plt.show()
-
-        # print(f"\nDeformation Function: {func_name} \t Mean Relative Error: {relative_error:.3}% \t \t")
     return model
 
 if __name__ == "__main__":
