@@ -5,6 +5,7 @@ from tools.plotting import eval_and_plot
 from scripts.overfit import overfit
 from scripts.param_search import parameter_search
 from scripts.regularize import regularize
+from scripts.fit_material import fit_material_model, test_material_model
 
 
 MODELFILE = "mymodel.torch"
@@ -43,6 +44,8 @@ if __name__ == '__main__':
                                      modelfile=MODELFILE)
     eval_and_plot(regularized_model, DATA_HANDLER, plot_title='Regularized Model')
 
+    model, data_handler = fit_material_model(epochs=EPOCHS, patience=PATIENCE)
+    test_material_model(model, data_handler)
 
 
 # %%
