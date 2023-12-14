@@ -11,7 +11,7 @@ LEARNING_RATES = [.1, .01, .001, .0001, .00001]
 ADJUST_LEARNING_RATES = [.1, .3, .5, .7 , 1., 2., 3., 4.]
 HIDDEN_DIMENSIONS = [8, 16, 32, 64, 128]
 
-EPOCHS = 1
+EPOCHS = 500
 PATIENCE = 50
 
 SNR = 1.
@@ -41,8 +41,7 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
             model.build()
             model.start_training(data_handler, verbosity=0, patience=patience)
             data_handler.reset()
-            _,_, testlosses = model.start_evaluation(data_handler)
-            error = min(testlosses)
+            error = model.start_evaluation(data_handler)
             if error < min_error:
                 min_error = error
                 best_lr = lr
@@ -57,14 +56,13 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
         data_handler.reset()
         lr = best_lr * adjust_lr
         model = initial_model
-        model.hyperparams.hidden_dim=hidden_dim
+        model.hyperparams.hidden_dim=best_dim
         model.hyperparams.learning_rate = lr
         model.hyperparams.epochs = epochs
         model.build()
         model.start_training(data_handler, verbosity=0, patience=patience)
         data_handler.reset()
-        _,_, testlosses = model.start_evaluation(data_handler)
-        error = min(testlosses)
+        error = model.start_evaluation(data_handler)
         if error < min_error:
             min_error = error
             very_best_lr = lr
@@ -79,10 +77,9 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
     model.build()
     model.start_training(data_handler, verbosity=0, patience=patience)
     data_handler.reset()
-    _,_, testlosses = model.start_evaluation(data_handler)
-    error = min(testlosses)
+    error = model.start_evaluation(data_handler)
     print(f'\t Learning Rate: {round(very_best_lr, ndigits=10)} \t \t Test Error: {error:.3e}')
-    model.save(modelfile)
+    
     return model
 
 if __name__ == '__main__':

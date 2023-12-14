@@ -49,13 +49,13 @@ class MLP(Model):
     def build(self):
         self.layers = nn.ModuleList()
 
-        self.layers.append(nn.Linear(self.input_dim, self.hidden_dim))
-        self.layers.append(self.activation)
-        for _ in range(self.n_layers):
-            linear = nn.Linear(self.hidden_dim, self.hidden_dim)
+        self.layers.append(nn.Linear(self.hyperparams.input_dim, self.hyperparams.hidden_dim))
+        self.layers.append(self.hyperparams.activation)
+        for _ in range(self.hyperparams.n_layers):
+            linear = nn.Linear(self.hyperparams.hidden_dim, self.hyperparams.hidden_dim)
             self.layers.append(linear)
-            self.layers.append(self.activation)
-        self.layers.append(nn.Linear(self.hidden_dim, self.output_dim))
+            self.layers.append(self.hyperparams.activation)
+        self.layers.append(nn.Linear(self.hyperparams.hidden_dim, self.hyperparams.output_dim))
         return self
 
     def forward(self, input_data):
