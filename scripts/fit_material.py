@@ -53,6 +53,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
         '1x': lambda x: incompressible(x, 1),
         '2x': lambda x: incompressible(x, 2),
         '10x': lambda x: incompressible(x, 10),
+        '100x': lambda x: incompressible(x, 100),
         'A1x': data_handler.random_incompressible_deformation,
         'A2x': data_handler.random_incompressible_deformation,
         'A3x': data_handler.random_incompressible_deformation,

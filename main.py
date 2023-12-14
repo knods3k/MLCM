@@ -35,6 +35,7 @@ if __name__ == '__main__':
                                      hidden_dimensions=HIDDEN_DIMENSIONS, patience=PATIENCE,
                                      modelfile=MODELFILE)
     eval_and_plot(initial_model, DATA_HANDLER, plot_title='Initial Model')
+    initial_model.save(MODELFILE)
 
     regularized_model = regularize(initial_model=initial_model,
                                    data_handler=DATA_HANDLER, epochs=EPOCHS,
@@ -43,9 +44,11 @@ if __name__ == '__main__':
                                      lambdas=LAMBDAS, patience=PATIENCE,
                                      modelfile=MODELFILE)
     eval_and_plot(regularized_model, DATA_HANDLER, plot_title='Regularized Model')
+    regularized_model.save('regularized_'+MODELFILE)
 
-    model, data_handler = fit_material_model(epochs=EPOCHS, patience=PATIENCE)
-    test_material_model(model, data_handler)
+    material_model, data_handler = fit_material_model(epochs=EPOCHS, patience=PATIENCE)
+    test_material_model(material_model, data_handler)
+    material_model.save('material_'+MODELFILE)
 
 
 # %%

@@ -1,4 +1,4 @@
-from tools.settings import DEVICE
+from tools.settings import DEVICE, MACHINE_EPSILON
 from tools.data import DataHandler
 import torch
 import matplotlib.pyplot as plt
@@ -96,16 +96,8 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
 
 
 def start_evaluation(model, data_handler):
-    test_x, test_y = data_handler.get_test_data()
+    test_x, test_y = data_handler.get_training_data()
     with torch.no_grad():
         model.eval() 
-        outputs = [] 
-        targets = []
-        testlosses = []
-
         out = model(test_x.to(DEVICE))
-
-        outputs.append(out.cpu().detach().numpy())
-        targets.append(test_y.cpu().detach().numpy())
-        testlosses.append(model.hyperparams.criterion(out, test_y.to(DEVICE)).item())
-    return outputs, targets, testlosses
+    return (model.hyperparams.criterion(out, test_y.to(DEVICE)).item()) 

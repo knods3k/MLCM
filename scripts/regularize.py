@@ -38,9 +38,7 @@ def regularize(data_handler=DATA_HANDLER, initial_model=INITIAL_MODEL,
             model.start_training(data_handler, verbosity=0, patience=patience)
 
             model.hyperparams.criterion = criterion
-            _,_, testlosses = model.start_evaluation(data_handler)
-
-            error = min(testlosses)
+            error = model.start_evaluation(data_handler)
             if error < min_error:
                 min_error = error
                 best_lr = lr
@@ -62,9 +60,7 @@ def regularize(data_handler=DATA_HANDLER, initial_model=INITIAL_MODEL,
         model.hyperparams.epochs = 2*epochs
         model.start_training(data_handler, verbosity=0, patience=patience)
 
-        model.hyperparams.criterion = criterion
-        _,_, testlosses = model.start_evaluation(data_handler)
-        error = min(testlosses)
+        error = model.start_evaluation(data_handler)
         if error < min_error:
             min_error = error
             very_best_lr = lr
@@ -80,8 +76,9 @@ def regularize(data_handler=DATA_HANDLER, initial_model=INITIAL_MODEL,
     model.start_training(data_handler, verbosity=2, patience=patience)
 
     model.hyperparams.criterion = criterion
-    _,_, testlosses = model.start_evaluation(data_handler)
-    model.save('regularized_'+modelfile)
+    error = model.start_evaluation(data_handler)
+    print(f'Final Evaluation Error: {round(error, ndigits=4)}')
+
     return model
 
 if __name__ == '__main__':

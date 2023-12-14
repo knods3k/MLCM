@@ -5,7 +5,7 @@ from tools.hyperparameters import Hyperparameters
 from tools.data import DataHandler
 from tools.plotting import eval_and_plot
 
-EPOCHS = 1
+EPOCHS = 2000
 LEARNING_RATE = .0005
 SNR = 1.
 DATA_HANDLER = DataHandler(snr=SNR)
