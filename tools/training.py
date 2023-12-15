@@ -39,18 +39,19 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
     early_stopping = EarlyStopping(patience=patience)
     restore_best = RestoreBest()
     data_handler.batch_size = model.hyperparams.batch_size
-    test_x, test_y = data_handler.get_test_data()
+    test_x, test_y = data_handler.get_training_data()
     test_x = test_x.to(DEVICE)
     test_y = test_y.to(DEVICE)
     train_loader = data_handler.get()
     model.to(DEVICE)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=model.hyperparams.learning_rate)
-    avg_losses = torch.zeros(model.hyperparams.epochs)
+    min_train_losses = torch.zeros(model.hyperparams.epochs)
+    test_losses = torch.zeros(model.hyperparams.epochs)
 
     for epoch in range(model.hyperparams.epochs):
         model.train()
-        avg_loss = 0.
+        min_train_loss = []
 
         for x, y in train_loader:
             model.zero_grad()
@@ -61,33 +62,39 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
             loss.backward()
             optimizer.step()
 
-            avg_loss += loss.item()
+            min_train_loss.append(loss.item())
 
-        avg_losses[epoch] = avg_loss / len(train_loader) 
-        validation_loss = model.hyperparams.criterion(model(test_x), test_y)
-        restore_best(model, validation_loss)
-        if early_stopping(validation_loss):
+        min_train_losses[epoch] = min(min_train_loss)
+
+        with torch.no_grad():
+            test_loss = model.hyperparams.criterion(model(test_x), test_y).item()
+            test_losses[epoch] = test_loss
+
+        restore_best(model, test_loss)
+        if early_stopping(test_loss):
             break
-        if epoch % 20 == 0 and verbosity >= 1:
-            print(f"Epoch {epoch:6d}/{model.hyperparams.epochs} \t\t Test Loss: \t {validation_loss:.2e} \t",
+        if epoch % 20 == 0 and verbosity >= 2:
+            print(f"Epoch {epoch:6d}/{model.hyperparams.epochs} \t\t Test Loss: \t {test_loss:.2e} \t",
                                                             end='\r', flush=True)
     
     model = restore_best.best_model
 
-    validation_loss = model.hyperparams.criterion(model(test_x), test_y)
+    test_loss = model.hyperparams.criterion(model(test_x), test_y)
 
-    print(f"\n \t\t \t\t Final Loss: \t {(validation_loss):.2e} \t",
+    print(f"\n \t\t \t\t Final Loss: \t {test_loss:.2e} \t",
                                                                 end='\r', flush=True)
 
 
 
-    if verbosity >= 2:
+    if verbosity >= 1:
         plt.figure(figsize=(12, 8))
-        plt.plot(avg_losses, "-")
-        plt.title("Train loss (MSE, reduction=mean, averaged over epoch)")
+        plt.plot(min_train_losses, "-", label='Training Loss')
+        plt.plot(test_losses, ".", label='Test Loss')
+        plt.title("Training History")
         plt.xlabel("Epoch")
-        plt.ylabel("loss")
+        plt.ylabel("Loss (MSE)")
         plt.grid(visible=True, which='both', axis='both')
+        plt.legend()
         plt.show()
 
     if model_file is not None:

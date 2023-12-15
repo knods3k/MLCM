@@ -13,30 +13,28 @@ import matplotlib.pyplot as plt
 
 def emale(true, pred):
     return torch.exp(
-        torch.log(true/pred).mean()
+        torch.log(pred/true).mean()
         ).detach().cpu()
 
 MATERIAL = HyperelasticMaterial()
-HIDDEN_DIMS = [10, 20, 30, 40]
+DEFAULT_DEFORMATION_FUNCTION = 'incompressible'
+DATA_HANDLER = MaterialDataHandler(material=MATERIAL,
+                                       deformation_function=DEFAULT_DEFORMATION_FUNCTION,
+                                       max_body_scale=1, batchsize=16, samples=1,
+                                       body_resolution=10)
+HIDDEN_DIMS = [35, 40, 45, 50, 55, 60]
 INPUT_DIM = 3
 N_LAYERS = 5
 EPOCHS = 250
 PATIENCE = 10
 
-DEFAULT_DEFORMATION_FUNCTION = 'incompressible'
 
-
-def fit_material_model(material=MATERIAL, n_layers=N_LAYERS,
-                       epochs=EPOCHS, patience=PATIENCE,
-                       deformation_function=DEFAULT_DEFORMATION_FUNCTION):
+def fit_material_model(data_handler=DATA_HANDLER, n_layers=N_LAYERS,
+                       epochs=EPOCHS, patience=PATIENCE):
     '''
     Train an MLP to predict the Helmholtz Free Energy.
     '''
-    torch.random.manual_seed(1)
-    data_handler = MaterialDataHandler(material=material,
-                                       deformation_function=deformation_function,
-                                       max_body_scale=1, batchsize=16, samples=1,
-                                       body_resolution=10)
+    data_handler.reset()
 
     hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=n_layers)
     model = MLP(hyperparams=hyperparams)
@@ -54,16 +52,10 @@ def test_material_model(model, data_handler, material=MATERIAL):
         '2x': lambda x: incompressible(x, 2),
         '10x': lambda x: incompressible(x, 10),
         '100x': lambda x: incompressible(x, 100),
+        '1000x': lambda x: incompressible(x, 1000),
         'A1x': data_handler.random_incompressible_deformation,
         'A2x': data_handler.random_incompressible_deformation,
         'A3x': data_handler.random_incompressible_deformation,
-        # '1.1x': lambda x: 1.1*x,
-        # '2.0x': lambda x: 2.*x,
-        # '100x': lambda x: 100.*x,
-        # 'Sqaure': torch.square,
-        # 'Root': torch.sqrt,
-        # 'Exp.': torch.exp,
-        # 'Log.': torch.log
     }
     print('\n\n\n')
     torch.random.manual_seed(1)
@@ -84,7 +76,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
         energy_predicted *= data_handler.normalizing_constant_out
         energy_predicted += MACHINE_EPSILON
         energy_true += MACHINE_EPSILON
-        error = emale(energy_true, energy_predicted.detach().cpu().numpy())
+        error = emale(energy_true, energy_predicted)
 
         body = X[0].detach().cpu().numpy()
         deformed = x[0].detach().cpu().numpy()
@@ -94,6 +86,38 @@ def test_material_model(model, data_handler, material=MATERIAL):
         plt.scatter(deformed[:,0], deformed[:,1], c='r', label='Deformed')
         plt.legend()
         plt.show()
+    
+    error_per_deformation_amount = []
+    # deformation_amounts = torch.linspace(2,1000,999)
+    deformation_amounts = torch.logspace(0, 3, 99) + .5
+    for deformation_amount in deformation_amounts:
+        incompressible = lambda x, factor: torch.stack([factor*x[:,:,0], 1/factor*x[:,:,1]], axis=-1)
+        function = lambda x: incompressible(x, deformation_amount)
+        test_body_size = 100
+        n_test_bodies = 1
+        scale_test_bodies = 100.
+
+        X = torch.rand((n_test_bodies,test_body_size,2), requires_grad=True)*scale_test_bodies
+        material.set_body_configuration(X)
+        u = material.deform(function)
+        x = material.x
+
+        energy_true = material.get_helmholtz_free_energy()
+        input_data = material.get_invariant_deviations()
+        input_data /= data_handler.normalizing_constant_in
+        energy_predicted = model((input_data).to(DEVICE)).cpu().squeeze()
+
+        energy_predicted *= data_handler.normalizing_constant_out
+        energy_predicted += MACHINE_EPSILON
+        energy_true += MACHINE_EPSILON
+        error = emale(energy_true, energy_predicted)
+        error_per_deformation_amount.append(error.detach().cpu().numpy())
+
+    plt.plot(deformation_amounts, error_per_deformation_amount)
+    plt.ylabel('eMALE')
+    plt.xscale('log')
+    plt.xlabel('Deformation Amount')
+
     return model
 
 if __name__ == "__main__":
