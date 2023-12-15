@@ -36,7 +36,7 @@ class HyperelasticMaterial():
                                      retain_graph=True)[0]
         duydxy = torch.autograd.grad(self.x[:,:,1], self.X,\
                                      grad_outputs=torch.ones((batch_size,body_size)),
-                                     retain_graph=True)[0]
+                                       retain_graph=True)[0]
         self.F = torch.zeros(batch_size, body_size, 2, 2)
         self.F[:, :, 0, 0] = duxdxy[:, :, 0]
         self.F[:, :, 0, 1] = duxdxy[:, :, 1]
@@ -46,9 +46,6 @@ class HyperelasticMaterial():
         self.I1 = torch.einsum('ijkl,ijkl -> ij', self.F,self.F)
         self.I2 = .5 * ((self.I1**2) - (torch.einsum('ijkl,ijkl -> ij', self.C, self.C)))
         self.I3 = torch.linalg.det(self.C)
-        self.I1_deviation = self.I1 - 2
-        self.I2_deviation = self.I2 - 2
-        self.I3_deviation = self.I1 - 1
         self.J = torch.sqrt(self.I3)
         return self
         
@@ -68,10 +65,13 @@ class HyperelasticMaterial():
                 + (self.lam/2)*((torch.log(self.J))**2)
         
 
-        # assert torch.all(psi != torch.inf) and torch.all(psi >= 0)
+        # assert torch.all(psi != torch.inf) and torch.all(psi >= 0) and torch.all(psi != torch.nan)
         return psi
     
     def get_invariant_deviations(self):
+        self.I1_deviation = self.I1 - 2
+        self.I2_deviation = self.I2 - 2
+        self.I3_deviation = self.I3 - 1
         return torch.stack((self.I1_deviation,
                                self.I2_deviation,
                                self.I3_deviation), axis=-1)

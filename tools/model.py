@@ -21,7 +21,8 @@ class Model(nn.Module):
         self.hyperparams = hyperparams
 
     def start_training(self, *args, **kwargs):
-        return start_training(self, *args, **kwargs)
+        self = start_training(self, *args, **kwargs)
+        return self
     
     def start_evaluation(self, *args, **kwargs):
         return start_evaluation(self, *args, **kwargs)

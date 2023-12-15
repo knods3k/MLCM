@@ -12,7 +12,8 @@ def eval_and_plot(model, data_handler, plot_title=""):
         :return: evaluation metrics
         """
         test_x1_mesh, test_x2_mesh = data_handler.get_mesh()
-        train_x, train_y = data_handler.get_training_data()
+        data_handler.reset()
+        train_x, train_y = next(iter(data_handler.get()))
         test_x, test_y = data_handler.get_test_data()
         net_outputs_test = model(test_x.to(DEVICE)).cpu().detach()
         # train_x = train_x.cpu().detach().numpy()

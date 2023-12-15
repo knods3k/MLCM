@@ -17,16 +17,16 @@ PATIENCE = 50
 
 ADJUST_LEARNING_RATES = [.1, .3, .5, .7 , 1., 2., 3., 4.]
 
-def regularize(data_handler=DATA_HANDLER, initial_model=INITIAL_MODEL,
+def regularize(initial_model=INITIAL_MODEL, data_handler=DATA_HANDLER,
                lambdas=LAMBDAS, learning_rates=LEARNING_RATES,
                adjust_learning_rates=ADJUST_LEARNING_RATES, epochs=EPOCHS,
-               patience=PATIENCE, modelfile=MODELFILE):
+               patience=PATIENCE):
     best_lr = None
     best_lam = None
     min_error = float('inf')
     for lam in lambdas:
 
-        print(f'Regularization Paramter: {lam}')
+        print(f'\n Regularization Paramter: {lam}')
         for lr in learning_rates:
             data_handler.reset()
             model = initial_model
@@ -60,6 +60,7 @@ def regularize(data_handler=DATA_HANDLER, initial_model=INITIAL_MODEL,
         model.hyperparams.epochs = 2*epochs
         model.start_training(data_handler, verbosity=0, patience=patience)
 
+        model.hyperparams.criterion = criterion
         error = model.start_evaluation(data_handler)
         if error < min_error:
             min_error = error

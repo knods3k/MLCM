@@ -24,14 +24,16 @@ MODEL = MLP(hyperparams=HYPERPARAMS)
 def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
                      adjust_learning_rates=ADJUST_LEARNING_RATES,
                      hidden_dimensions=HIDDEN_DIMENSIONS, epochs=EPOCHS, patience=PATIENCE,
-                     modelfile=MODELFILE):
+                     verbosity=0):
 
 
     best_lr = None
     best_dim = None
     min_error = float('inf')
+    error_heat_map = {}
     for hidden_dim in hidden_dimensions:
-        print(f'Hidden Dimension: {hidden_dim}')
+        print(f'\n Hidden Dimension: {hidden_dim}')
+        errors_per_learning_rate = {}
         for lr in learning_rates:
             data_handler.reset()
             model = initial_model
@@ -42,11 +44,13 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
             model.start_training(data_handler, verbosity=0, patience=patience)
             data_handler.reset()
             error = model.start_evaluation(data_handler)
+            errors_per_learning_rate.update({str(lr): error})
             if error < min_error:
                 min_error = error
                 best_lr = lr
                 best_dim = hidden_dim
             print(f'\t Learning Rate: {lr} \t \t Test Error: {error:.2e}')
+        error_heat_map.update({str(hidden_dim): errors_per_learning_rate})
 
     print(f'Best Hidden Dimension: {best_dim} \t \t Best Learning Rate: {best_lr}')
 
@@ -58,7 +62,7 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
         model = initial_model
         model.hyperparams.hidden_dim=best_dim
         model.hyperparams.learning_rate = lr
-        model.hyperparams.epochs = epochs
+        model.hyperparams.epochs = epochs*2
         model.build()
         model.start_training(data_handler, verbosity=0, patience=patience)
         data_handler.reset()
@@ -71,15 +75,17 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
     print(f'Very Best Learning Rate: {very_best_lr}')
     data_handler.reset()
     model = initial_model
-    model.hyperparams.hidden_dim=hidden_dim
-    model.hyperparams.learning_rate = lr
-    model.hyperparams.epochs = epochs
+    model.hyperparams.hidden_dim=best_dim
+    model.hyperparams.learning_rate = very_best_lr
+    model.hyperparams.epochs = epochs*4
     model.build()
     model.start_training(data_handler, verbosity=0, patience=patience)
     data_handler.reset()
     error = model.start_evaluation(data_handler)
     print(f'\t Learning Rate: {round(very_best_lr, ndigits=10)} \t \t Test Error: {error:.3e}')
     
+    if verbosity >= 1:
+        return model, error_heat_map
     return model
 
 if __name__ == '__main__':
