@@ -24,7 +24,7 @@ MODEL = MLP(hyperparams=HYPERPARAMS)
 def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_rates=LEARNING_RATES,
                      adjust_learning_rates=ADJUST_LEARNING_RATES,
                      hidden_dimensions=HIDDEN_DIMENSIONS, epochs=EPOCHS, patience=PATIENCE,
-                     verbosity=0):
+                     verbosity=1):
 
 
     best_lr = None
@@ -79,7 +79,7 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
     model.hyperparams.learning_rate = very_best_lr
     model.hyperparams.epochs = epochs*4
     model.build()
-    model.start_training(data_handler, verbosity=0, patience=patience)
+    model.start_training(data_handler, verbosity=1, patience=patience)
     data_handler.reset()
     error = model.start_evaluation(data_handler)
     print(f'\t Learning Rate: {round(very_best_lr, ndigits=10)} \t \t Test Error: {error:.3e}')
