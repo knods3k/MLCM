@@ -36,9 +36,9 @@ def fit_material_model(data_handler=DATA_HANDLER, n_layers=N_LAYERS,
     '''
     data_handler.reset()
 
-    hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=n_layers)
+    hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=n_layers, activation=torch.nn.ReLU())
     model = MLP(hyperparams=hyperparams)
-    model = parameter_search(model, data_handler, epochs=epochs, patience=patience,
+    model, error_heat_map = parameter_search(model, data_handler, epochs=epochs, patience=patience,
                              hidden_dimensions=HIDDEN_DIMS)
 
 
