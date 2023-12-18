@@ -20,12 +20,13 @@ ADJUST_LEARNING_RATES = [.1, .3, .5, .7 , 1., 2., 3., 4.]
 def regularize(initial_model=INITIAL_MODEL, data_handler=DATA_HANDLER,
                lambdas=LAMBDAS, learning_rates=LEARNING_RATES,
                adjust_learning_rates=ADJUST_LEARNING_RATES, epochs=EPOCHS,
-               patience=PATIENCE):
+               patience=PATIENCE, verbosity=0):
     best_lr = None
     best_lam = None
     min_error = float('inf')
+    error_heat_map = {}
     for lam in lambdas:
-
+        errors_per_lam = {}
         print(f'\n Regularization Paramter: {lam}')
         for lr in learning_rates:
             data_handler.reset()
@@ -39,12 +40,14 @@ def regularize(initial_model=INITIAL_MODEL, data_handler=DATA_HANDLER,
 
             model.hyperparams.criterion = criterion
             error = model.start_evaluation(data_handler)
+            errors_per_lam.update({str(lr): error})
             if error < min_error:
                 min_error = error
                 best_lr = lr
                 best_lam = lam
-
             print(f'\t Learning Rate: {lr} \t \t \t Evaluation Error: {round(error, ndigits=4)}')
+        error_heat_map.update({str(lam): errors_per_lam})
+
 
     print(f'Best Regularization Paramter: {best_lam} \t \t Best Learning Rate: {best_lr}')
 
@@ -80,7 +83,10 @@ def regularize(initial_model=INITIAL_MODEL, data_handler=DATA_HANDLER,
     error = model.start_evaluation(data_handler)
     print(f'Final Evaluation Error: {round(error, ndigits=4)}')
 
+    if verbosity >= 1:
+        return model, error_heat_map
     return model
+
 
 if __name__ == '__main__':
     regularize()

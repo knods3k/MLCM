@@ -80,7 +80,15 @@ class DataHandler():
         test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
         return torch.meshgrid(test_x1, test_x2, indexing='ij') 
 
-
+    def normalize_data(self, data):
+        """
+        Normalizes the input data between 0 and 1.
+        """
+        min_val = torch.min(data)
+        max_val = torch.max(data)
+        normalized_data = (data - min_val) / (max_val - min_val + MACHINE_EPSILON)
+        return normalized_data
+    
     def get_training_data(self):
         """
         Generates training data. Independent variables x
@@ -92,10 +100,14 @@ class DataHandler():
                     + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
         train_x2 = (sample_span * torch.rand(self.samples)
                     + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
-        
-        train_x = torch.concat((train_x1, train_x2), dim=1)
+
+        train_x = torch.cat((train_x1, train_x2), dim=1)
         train_y = self.target_function(train_x1, train_x2)
         train_y = self.noise(train_y)
+
+        # Normalize the data
+        train_x = self.normalize_data(train_x)
+        train_y = self.normalize_data(train_y)
 
         return train_x, train_y
 
@@ -106,13 +118,17 @@ class DataHandler():
         and dependent variables y are generated.
         :return: test_x and test_y.
         """
-        test_x1 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
-        test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
+        test_x1 = torch.linspace(self.sample_min * 1.1, self.sample_max * 1.1, self.test_samples)
+        test_x2 = torch.linspace(self.sample_min * 1.1, self.sample_max * 1.1, self.test_samples)
         test_x1_mesh, test_x2_mesh = torch.meshgrid(test_x1, test_x2, indexing='ij')
         test_x1 = test_x1_mesh.flatten().unsqueeze(1)
         test_x2 = test_x2_mesh.flatten().unsqueeze(1)
         test_x = torch.cat((test_x1, test_x2), dim=1)
         test_y = self.target_function(test_x1, test_x2)
+
+        # Normalize the data
+        test_x = self.normalize_data(test_x)
+        test_y = self.normalize_data(test_y)
 
         return test_x, test_y
 

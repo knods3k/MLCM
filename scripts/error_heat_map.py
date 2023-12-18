@@ -31,10 +31,22 @@ model = MLP(hyperparams=hyperparams)
 model, error_heat_map = parameter_search(model, data_handler, epochs=EPOCHS, patience=PATIENCE,
                             hidden_dimensions=HIDDEN_DIMS, verbosity=1)
 
-df = pd.DataFrame(error_heat_map)
-sns.heatmap(df, annot=True, fmt='.3g', cbar_kws={'label': 'MSE'}, cmap='Oranges')
-plt.xlabel('Hidden Dimension')
-plt.ylabel('Learning Rate')
-plt.savefig('ignore/heatmap')
+# %%
+#df = pd.DataFrame(error_heat_map)
+#sns.heatmap(df, annot=True, fmt='.3g', cbar_kws={'label': 'MSE'}, cmap='Oranges')
+#plt.xlabel('Hidden Dimension')
+#plt.ylabel('Learning Rate')
+#plt.savefig('ignore/heatmap')
 
+# %%
+def plot_error_heat_map(error_dict, plot_title, xlabel='Hidden Dimension', ylabel='Learning Rate'):
+    df = pd.DataFrame(error_dict)
+    sns.heatmap(df, annot=True, fmt='.3g', cbar_kws={'label': 'MSE'}, cmap='Oranges')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(plot_title)
+    #plt.savefig('ignore/heatmap')
+
+# %%
+plot_error_heat_map(error_heat_map, 'Material Model Parameter Search', xlabel='Hidden Dimension', ylabel='Learning Rate')
 # %%

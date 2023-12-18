@@ -28,19 +28,18 @@ def eval_and_plot(model, data_handler, plot_title=""):
         print(f"MAE: {mae}")
         r2 = r2_score(test_y, net_outputs_test)
         print(f"R2: {r2}")
-        mape = mean_absolute_percentage_error(test_y, net_outputs_test)
-        print(f"MAPE: {mape}")
 
-        eval_metrics = {"RMSE": rmse, "MSE": mse, "MAE": mae, "R2": r2, "MAPE": mape}
+
+        eval_metrics = {"RMSE": rmse, "MSE": mse, "MAE": mae, "R2": r2}
 
         plt.figure(figsize=(16,9))
         ax = plt.subplot(111, projection='3d')
 
         ax.plot_surface(test_x1_mesh, test_x2_mesh,
                         test_y.reshape(data_handler.test_samples,data_handler.test_samples),
-                        color='w', label="Target", alpha=.2, lw=.5, edgecolor='b')
+                        color='w', label="Target", alpha=.3, lw=.5, edgecolor='b')
         
-        ax.scatter(train_x[:,0], train_x[:,1], train_y, marker="^", color="r", label="Target", s=100)
+        #ax.scatter(train_x[:,0], train_x[:,1], train_y, marker="^", color="r", label="Target", s=100)
         
         ax.plot_surface(
                 test_x1_mesh, test_x2_mesh,
@@ -53,6 +52,7 @@ def eval_and_plot(model, data_handler, plot_title=""):
         ax.set_zlabel("Function value")
         plt.title(plot_title)
         plt.legend()
+        plt.tight_layout()
         plt.show()
 
         return eval_metrics
