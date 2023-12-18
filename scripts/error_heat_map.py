@@ -12,7 +12,7 @@ from scripts.param_search import parameter_search
 
 import torch
 
-EPOCHS=250
+EPOCHS=2
 
 torch.random.manual_seed(1)
 data_handler = MaterialDataHandler(material=MATERIAL,
@@ -24,7 +24,7 @@ hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=N_LAYERS)
 hyperparams = Hyperparameters(input_dim=INPUT_DIM, n_layers=N_LAYERS, epochs=EPOCHS, hidden_dim=55)
 model = MLP(hyperparams=hyperparams)
 
-model.start_training(data_handler, verbosity=2)
+# model.start_training(data_handler, verbosity=2)
 
 
 #%%
