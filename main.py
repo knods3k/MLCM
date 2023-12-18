@@ -53,7 +53,7 @@ if __name__ == '__main__':
     eval_and_plot(regularized_model, DATA_HANDLER, plot_title='Regularized Model')
     regularized_model.save('regularized_'+MODELFILE)
 
-    material_model, data_handler = fit_material_model(epochs=EPOCHS, patience=PATIENCE)
+    material_model, data_handler = fit_material_model(epochs=250, patience=10)
     test_material_model(material_model, data_handler)
     material_model.save('material_'+MODELFILE)
 
