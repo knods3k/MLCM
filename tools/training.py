@@ -30,13 +30,16 @@ class RestoreBest():
     def __call__(self, model, validation_loss):
         if validation_loss < self.min_validation_loss:
             self.min_validation_loss = validation_loss
-            torch.save(model.state_dict(), 'tmp')
+            torch.save(model.state_dict(), 'tmp.torch')
     
 
 
-def start_training(model, data_handler, model_file=None, verbosity=2, patience=float('inf')):
+def start_training(model, data_handler, model_file=None, verbosity=2, patience=float('inf'), restore=True):
     early_stopping = EarlyStopping(patience=patience)
-    restore_best = RestoreBest()
+    if restore:
+        restore_best = RestoreBest()
+    else:
+        restore_best = lambda _,__: None
     data_handler.batch_size = model.hyperparams.batch_size
     test_x, test_y = data_handler.get_training_data()
     test_x = test_x.to(DEVICE)
@@ -76,8 +79,9 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
             print(f"Epoch {epoch:6d}/{model.hyperparams.epochs} \t\t Test Loss: \t {test_loss:.2e} \t",
                                                             end='\r', flush=True)
     
-    model.load_state_dict(torch.load('tmp'))
-    remove('tmp')
+    if restore:
+        model.load_state_dict(torch.load('tmp.torch'))
+        remove('tmp.torch')
 
     test_loss = model.hyperparams.criterion(model(test_x), test_y)
 
@@ -91,11 +95,11 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
         plt.plot(min_train_losses, "-", label='Training Loss')
         plt.plot(test_losses, ".", label='Test Loss')
         minimum = (torch.ones_like(test_losses)*test_losses.min()).detach().cpu()
-        plt.plot(minimum, 'r--', label='Final Test Loss')
+        plt.plot(minimum, 'r--', label='Best Test Loss')
         plt.title("Training History")
         plt.xlabel("Epoch")
         plt.ylabel("Loss (MSE)")
-        plt.grid(visible=True, which='both', axis='both', alpha=.66, linestyle='..')
+        plt.grid(visible=True, which='both', axis='both', alpha=.66, linestyle='--')
         plt.yscale('log')
         plt.legend()
         plt.show()
