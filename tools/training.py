@@ -1,8 +1,7 @@
-from tools.settings import DEVICE, MACHINE_EPSILON
-from tools.data import DataHandler
+from tools.settings import DEVICE
 import torch
 import matplotlib.pyplot as plt
-
+from os import remove
 
 class EarlyStopping():
     def __init__(self, patience=10, delta_min=0) -> None:
@@ -31,7 +30,7 @@ class RestoreBest():
     def __call__(self, model, validation_loss):
         if validation_loss < self.min_validation_loss:
             self.min_validation_loss = validation_loss
-            self.best_model = model
+            torch.save(model.state_dict(), 'tmp')
     
 
 
@@ -77,7 +76,8 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
             print(f"Epoch {epoch:6d}/{model.hyperparams.epochs} \t\t Test Loss: \t {test_loss:.2e} \t",
                                                             end='\r', flush=True)
     
-    model = restore_best.best_model
+    model.load_state_dict(torch.load('tmp'))
+    remove('tmp')
 
     test_loss = model.hyperparams.criterion(model(test_x), test_y)
 
@@ -90,10 +90,13 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
         plt.figure(figsize=(12, 8))
         plt.plot(min_train_losses, "-", label='Training Loss')
         plt.plot(test_losses, ".", label='Test Loss')
+        minimum = (torch.ones_like(test_losses)*test_losses.min()).detach().cpu()
+        plt.plot(minimum, 'r--', label='Final Test Loss')
         plt.title("Training History")
         plt.xlabel("Epoch")
         plt.ylabel("Loss (MSE)")
         plt.grid(visible=True, which='both', axis='both')
+        plt.yscale('log')
         plt.legend()
         plt.show()
 

@@ -62,7 +62,7 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
         model = initial_model
         model.hyperparams.hidden_dim=best_dim
         model.hyperparams.learning_rate = lr
-        model.hyperparams.epochs = epochs*2
+        model.hyperparams.epochs = epochs
         model.build()
         model.start_training(data_handler, verbosity=0, patience=patience)
         data_handler.reset()
@@ -77,9 +77,9 @@ def parameter_search(initial_model = MODEL, data_handler=DATA_HANDLER, learning_
     model = initial_model
     model.hyperparams.hidden_dim=best_dim
     model.hyperparams.learning_rate = very_best_lr
-    model.hyperparams.epochs = epochs*4
+    model.hyperparams.epochs = epochs
     model.build()
-    model.start_training(data_handler, verbosity=1, patience=patience)
+    model.start_training(data_handler, verbosity=1)
     data_handler.reset()
     error = model.start_evaluation(data_handler)
     print(f'\t Learning Rate: {round(very_best_lr, ndigits=10)} \t \t Test Error: {error:.3e}')
