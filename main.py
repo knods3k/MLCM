@@ -40,7 +40,7 @@ if __name__ == '__main__':
                     xlabel='Hidden Dimension',
                     ylabel='Learning Rate') 
 
-    material_model, data_handler = fit_material_model(epochs=250, patience=10)
+    material_model, data_handler = fit_material_model(epochs=EPOCHS, patience=PATIENCE)
     test_material_model(material_model, data_handler)
     material_model.save('material_'+MODELFILE)
 

@@ -11,18 +11,25 @@ from scripts.param_search import parameter_search
 import torch
 import matplotlib.pyplot as plt
 
-def emale(true, pred):
+def exp_mean_log_error(true, pred):
+    '''
+    Compute the exponential mean logarithmic error (eMLE).
+
+    The eMLE is 1 iff true and predicted values are exactly equal.
+    Large underestimations tend to 0.
+    Large overestimations tend to infinity.
+    '''
     return torch.exp(
         torch.log(pred/true).mean()
         ).detach().cpu()
 
 MATERIAL = HyperelasticMaterial()
 DATA_HANDLER = MaterialDataHandler(material=MATERIAL,
-                                       max_body_scale=1, batchsize=128, samples=16,
-                                       body_resolution=32)
+                                       max_body_scale=1, batchsize=160, samples=1,
+                                       body_resolution=10)
 HIDDEN_DIMS = [35, 40, 45, 50, 55, 60]
 INPUT_DIM = 3
-EPOCHS = 250
+EPOCHS = 2000
 PATIENCE = 10
 
 
@@ -73,7 +80,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
         energy_predicted *= data_handler.normalizing_constant_out
         energy_predicted += MACHINE_EPSILON
         energy_true += MACHINE_EPSILON
-        error = emale(energy_true, energy_predicted)
+        error = exp_mean_log_error(energy_true, energy_predicted)
 
         body = X[0].detach().cpu().numpy()
         deformed = x[0].detach().cpu().numpy()
@@ -106,7 +113,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
         energy_predicted *= data_handler.normalizing_constant_out
         energy_predicted += MACHINE_EPSILON
         energy_true += MACHINE_EPSILON
-        error = emale(energy_true, energy_predicted)
+        error = exp_mean_log_error(energy_true, energy_predicted)
         error_per_deformation_amount.append(error.detach().cpu().numpy())
 
     plt.plot(deformation_amounts, error_per_deformation_amount,
