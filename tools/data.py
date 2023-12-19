@@ -67,7 +67,7 @@ class DataHandler():
         """
         n = torch.normal(torch.zeros_like(input_tensor),
                          torch.zeros_like(input_tensor)+(
-                            self.snr*torch.max(torch.abs(input_tensor) + MACHINE_EPSILON)))
+                            (self.snr*(input_tensor.abs().mean())).sqrt() + MACHINE_EPSILON))
         return input_tensor + n
 
 
@@ -80,15 +80,6 @@ class DataHandler():
         test_x2 = torch.linspace(self.sample_min*1.1, self.sample_max*1.1, self.test_samples)
         return torch.meshgrid(test_x1, test_x2, indexing='ij') 
 
-    def normalize_data(self, data):
-        """
-        Normalizes the input data between 0 and 1.
-        """
-        min_val = torch.min(data)
-        max_val = torch.max(data)
-        normalized_data = (data - min_val) / (max_val - min_val + MACHINE_EPSILON)
-        return normalized_data
-    
     def get_training_data(self):
         """
         Generates training data. Independent variables x
@@ -100,14 +91,10 @@ class DataHandler():
                     + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
         train_x2 = (sample_span * torch.rand(self.samples)
                     + self.sample_min * torch.ones(self.samples)).unsqueeze(1)
-
-        train_x = torch.cat((train_x1, train_x2), dim=1)
+        
+        train_x = torch.concat((train_x1, train_x2), dim=1)
         train_y = self.target_function(train_x1, train_x2)
         train_y = self.noise(train_y)
-
-        # Normalize the data
-        train_x = self.normalize_data(train_x)
-        train_y = self.normalize_data(train_y)
 
         return train_x, train_y
 
@@ -125,10 +112,6 @@ class DataHandler():
         test_x2 = test_x2_mesh.flatten().unsqueeze(1)
         test_x = torch.cat((test_x1, test_x2), dim=1)
         test_y = self.target_function(test_x1, test_x2)
-
-        # Normalize the data
-        test_x = self.normalize_data(test_x)
-        test_y = self.normalize_data(test_y)
 
         return test_x, test_y
 
@@ -166,21 +149,21 @@ class DataHandler():
 
 class MaterialDataHandler(DataHandler):
     def __init__(self, material=MATERIAL, samples=SAMPLES, body_resolution=BODY_RESOLUTION,
-                 max_body_scale=MAX_BODY_SCALE, deformation_function=None, snr=0, batchsize=BATCH_SIZE):
-        super().__init__(samples, deformation_function, snr, batchsize)
+                 max_body_scale=MAX_BODY_SCALE, snr=0, batchsize=BATCH_SIZE):
+        super().__init__(samples, snr, batchsize)
 
         self.material = material
         self.body_resolution = body_resolution
         self.max_body_scale = max_body_scale
 
-        self.linear_coefficient = torch.tensor([1.])
-        self.polynomial_coefficients = torch.tensor([1., 2., 3., 4.])
-        self.deformation_function = deformation_function
-        self.build_deformation_function()
-
         self.normalize()
     
     def normalize(self):
+        '''
+        Normalizes input and output data.
+        
+        Stores the normalizing constant for later use.
+        '''
         self.normalizing_constant_out = 1.
         self.normalizing_constant_in = 1.
         x, y = self.get_test_data()
@@ -188,42 +171,19 @@ class MaterialDataHandler(DataHandler):
         self.normalizing_constant_out = y.max()
 
     @staticmethod
-    def random_linear_deformation(x):
-        linear_coefficient = torch.rand(()) * torch.randint(0, 2, size=()) + .1
-        return linear_coefficient * x
-
-    @staticmethod
-    def random_polynomial_deformation(x):
-        degree = int(torch.randint(0, 20, size=()))
-        exponents = torch.arange(degree)
-        polynomial_coefficients = 1/torch.exp(torch.lgamma(exponents))
-        polynomial_coefficients *= torch.rand(size=exponents.shape) 
-        polynomial_coefficients += .1
-        return (torch.pow(x.unsqueeze(-1), exponents)*polynomial_coefficients).sum(-1)
-    
-    @staticmethod
     def random_incompressible_deformation(x):
+        '''
+        Generate a random incompressible deformation.
+        
+        This is done by computing a randomized matrix with determinant, which ensures
+        volume remains unchanged, and then multiplying the input by that matrix.
+        '''
         dimension = x.shape[-1]
         A = torch.normal(0,DEFORMATION_SCALE,(dimension,dimension))
         A = torch.abs(A)
         A = torch.triu(A)
         A[0,0] /= torch.prod(torch.diag(A))
         return x @ A
-
-    
-    def build_deformation_function(self):
-        if self.deformation_function is None:
-            self.deformation_function = default_deformation_function
-        
-        if self.deformation_function == 'linear':
-            self.deformation_function = self.random_linear_deformation
-
-        if self.deformation_function == 'polynomial':
-            self.deformation_function = self.random_polynomial_deformation
-
-        if self.deformation_function == 'incompressible':
-            self.deformation_function = self.random_incompressible_deformation
-
 
     def get_test_data(self):
         """
@@ -235,7 +195,7 @@ class MaterialDataHandler(DataHandler):
 
         X = torch.rand((self.samples, self.body_resolution, 2)) * body_scale + MACHINE_EPSILON
         self.material.set_body_configuration(X)
-        self.material.deform(self.deformation_function)
+        self.material.deform(self.random_incompressible_deformation)
         train_x = self.material.get_invariant_deviations()
         train_y = self.material.get_helmholtz_free_energy().unsqueeze(-1)
 
@@ -257,6 +217,11 @@ class MaterialDataHandler(DataHandler):
         return train_x, train_y
     
     def get(self):
+        '''
+        Generate data by invoking the __getitem__ method.
+
+        Implements infinte data generation.
+        '''
         return DataLoader(self, batch_size=self.batchsize)
 
 
