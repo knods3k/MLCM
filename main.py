@@ -13,7 +13,7 @@ MODELFILE = "mymodel.torch"
 
 LEARNING_RATES = [.1, .01, .001, .0001, .00001]
 ADJUST_LEARNING_RATES = [.1, .3, .5, .7 , 1., 2., 3., 4.]
-HIDDEN_DIMENSIONS = [80, 160, 320, 640, 1280]
+HIDDEN_DIMENSIONS = [16, 32, 64, 128, 256]
 LAMBDAS = [9., 5., 1., .5, .1, 0.]
 
 EPOCHS = 2000
@@ -40,7 +40,7 @@ if __name__ == '__main__':
                     xlabel='Hidden Dimension',
                     ylabel='Learning Rate') 
 
-    material_model, data_handler = fit_material_model(epochs=EPOCHS, patience=PATIENCE)
+    material_model, data_handler, error_heat_map = fit_material_model(epochs=EPOCHS, patience=PATIENCE)
     test_material_model(material_model, data_handler)
     material_model.save('material_'+MODELFILE)
 

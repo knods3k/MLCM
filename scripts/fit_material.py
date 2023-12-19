@@ -46,7 +46,7 @@ def fit_material_model(data_handler=DATA_HANDLER, epochs=EPOCHS,
                              hidden_dimensions=HIDDEN_DIMS)
 
 
-    return model, data_handler
+    return model, data_handler, error_heat_map
     
 
 def test_material_model(model, data_handler, material=MATERIAL):
@@ -129,7 +129,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
     return model
 
 if __name__ == "__main__":
-    model, data_handler = fit_material_model()
+    model, data_handler, error_heat_map = fit_material_model()
     test_material_model(model, data_handler)
 
 # %%
