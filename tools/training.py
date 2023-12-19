@@ -95,7 +95,7 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
         plt.title("Training History")
         plt.xlabel("Epoch")
         plt.ylabel("Loss (MSE)")
-        plt.grid(visible=True, which='both', axis='both')
+        plt.grid(visible=True, which='both', axis='both', alpha=.66, linestyle='..')
         plt.yscale('log')
         plt.legend()
         plt.show()
