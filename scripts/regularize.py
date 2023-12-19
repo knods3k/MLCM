@@ -8,7 +8,6 @@ SNR = 1.
 DATA_HANDLER = DataHandler(snr=SNR)
 
 
-MODELFILE = "mymodel.torch"
 INITIAL_MODEL = MLP()
 LAMBDAS = [9., 5., 1., .5, .1, 0.]
 LEARNING_RATES = [.1, .01, .001, .0001, .00001]
@@ -45,7 +44,7 @@ def regularize(initial_model=INITIAL_MODEL, data_handler=DATA_HANDLER,
                 min_error = error
                 best_lr = lr
                 best_lam = lam
-            print(f'\t Learning Rate: {lr} \t \t \t Evaluation Error: {round(error, ndigits=4)}')
+            print(f'\t Learning Rate: {lr} \t \t \t Test Error: {error:.3e}')
         error_heat_map.update({str(lam): errors_per_lam})
 
 
@@ -60,7 +59,7 @@ def regularize(initial_model=INITIAL_MODEL, data_handler=DATA_HANDLER,
         new_criterion = lambda x,y: criterion(x,y) + best_lam * model.sum_weights()
         model.hyperparams.criterion = new_criterion
         model.hyperparams.learning_rate = lr
-        model.hyperparams.epochs = 2*epochs
+        model.hyperparams.epochs = epochs
         model.start_training(data_handler, verbosity=0, patience=patience)
 
         model.hyperparams.criterion = criterion
@@ -68,7 +67,7 @@ def regularize(initial_model=INITIAL_MODEL, data_handler=DATA_HANDLER,
         if error < min_error:
             min_error = error
             very_best_lr = lr
-        print(f'\t Learning Rate: {round(lr, ndigits=10)} \t \t \t Evaluation Error: {round(error, ndigits=4)}')
+        print(f'\t Learning Rate: {round(lr, ndigits=10)} \t \t \t Test Error: {error:.3e}')
 
     print(f'Very Best Learning Rate: {very_best_lr}')
     data_handler.reset()
@@ -76,12 +75,12 @@ def regularize(initial_model=INITIAL_MODEL, data_handler=DATA_HANDLER,
     new_criterion = lambda x,y: criterion(x,y) + best_lam * model.sum_weights()
     model.hyperparams.criterion = new_criterion
     model.hyperparams.learning_rate = very_best_lr
-    model.hyperparams.epochs = 2*epochs
+    model.hyperparams.epochs = epochs
     model.start_training(data_handler, verbosity=2, patience=patience)
 
     model.hyperparams.criterion = criterion
     error = model.start_evaluation(data_handler)
-    print(f'Final Evaluation Error: {round(error, ndigits=4)}')
+    print(f'Final Test Error: {round(error, ndigits=4)}')
 
     if verbosity >= 1:
         return model, error_heat_map
