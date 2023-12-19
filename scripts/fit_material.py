@@ -114,6 +114,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
         error_per_deformation_amount.append(error.detach().cpu().numpy())
 
     plt.plot(deformation_amounts, error_per_deformation_amount)
+    plt.plot(deformation_amounts, torch.ones_like(deformation_amounts), 'w--', alpha=.5)
     plt.ylabel('eMALE')
     plt.xscale('log')
     plt.xlabel('Deformation Amount')
