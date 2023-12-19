@@ -13,7 +13,7 @@ DATA_HANDLER = DataHandler(snr=SNR)
 def overfit(data_handler=DATA_HANDLER, epochs=EPOCHS, learning_rate=LEARNING_RATE):
     params = Hyperparameters(epochs=epochs, learning_rate=learning_rate)
     model = MLP(hyperparams=params) 
-    model.start_training(data_handler, restore=False)
+    model.start_training(data_handler, restore=True)
     return model
 
 if __name__ == '__main__':
