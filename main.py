@@ -11,15 +11,15 @@ from scripts.error_heat_map import plot_error_heat_map
 
 MODELFILE = "mymodel.torch"
 
-LEARNING_RATES = [.1, .01, .001, .0001, .00001]
+LEARNING_RATES = [.01, .001, .0001, .00001, .000001]
 ADJUST_LEARNING_RATES = [.1, .3, .5, .7 , 1., 2., 3., 4.]
-HIDDEN_DIMENSIONS = [16, 32, 64, 128, 256]
+HIDDEN_DIMENSIONS = [64, 128, 256, 512, 1024]
 LAMBDAS = [9., 5., 1., .5, .1, 0.]
 
 EPOCHS = 2000
 PATIENCE = 200
 
-SNR = 1.
+SNR = 10.
 
 DATA_HANDLER = DataHandler(snr=SNR)
 
@@ -39,7 +39,7 @@ if __name__ == '__main__':
                     plot_title='Parameter Search Regularized Model',
                     xlabel='Hidden Dimension',
                     ylabel='Learning Rate') 
-
+#%%
     material_model, data_handler, error_heat_map = fit_material_model(epochs=EPOCHS, patience=PATIENCE)
     test_material_model(material_model, data_handler)
     material_model.save('material_'+MODELFILE)
