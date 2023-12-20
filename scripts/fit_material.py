@@ -93,7 +93,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
     
     error_per_deformation_amount = []
     # deformation_amounts = torch.linspace(2,1000,999)
-    deformation_amounts = torch.logspace(0, 3, 99) + .5
+    deformation_amounts = torch.logspace(0, 4, 99) + .5
     for deformation_amount in deformation_amounts:
         deformation_function = lambda x: incompressible_deformation(x, deformation_amount)
         test_body_size = 100
