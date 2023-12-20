@@ -123,7 +123,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
              'r--',alpha=.5, label="5% Relative error")
     plt.plot(deformation_amounts, one*.95,
              'r--',alpha=.5)
-    plt.ylabel('eMALE')
+    plt.ylabel('eMLE')
     plt.xscale('log')
     plt.xlabel('Deformation Amount')
     plt.legend()
