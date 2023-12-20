@@ -91,7 +91,7 @@ def start_training(model, data_handler, model_file=None, verbosity=2, patience=f
 
 
     if verbosity >= 1:
-        plt.figure(figsize=(12, 8))
+        plt.figure()
         plt.plot(min_train_losses, "-", label='Training Loss')
         plt.plot(test_losses, ".", label='Test Loss')
         minimum = (torch.ones_like(test_losses)*test_losses.min()).detach().cpu()
