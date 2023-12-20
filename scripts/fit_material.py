@@ -86,7 +86,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
         deformed = x[0].detach().cpu().numpy()
         plt.xlabel(f"\nDeformation Function: {func_name} \n eMALE: {error:2.5}")
         plt.title(f'(Predicted) {energy_predicted.mean():.3} : {energy_true.mean():.3} (True)')
-        plt.scatter(body[:,0], body[:,1], s=1, c='w', label='Original')
+        plt.scatter(body[:,0], body[:,1], s=1, c='orange', label='Original')
         plt.scatter(deformed[:,0], deformed[:,1], s=1, c='r', label='Deformed')
         plt.legend()
         plt.show()
