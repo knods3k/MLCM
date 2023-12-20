@@ -57,9 +57,7 @@ def test_material_model(model, data_handler, material=MATERIAL):
         'Factor 10, no shear': lambda x: incompressible_deformation(x, 10),
         'Factor 100, no shear': lambda x: incompressible_deformation(x, 100),
         'Factor 1000, no shear': lambda x: incompressible_deformation(x, 1000),
-        'Random 1, with shear': data_handler.random_incompressible_deformation,
-        'Random 2, with shear': data_handler.random_incompressible_deformation,
-        'Random 3, with shear': data_handler.random_incompressible_deformation,
+        'Random, with shear': data_handler.random_incompressible_deformation,
     }
     print('\n\n\n')
     torch.random.manual_seed(1)
@@ -84,8 +82,8 @@ def test_material_model(model, data_handler, material=MATERIAL):
 
         body = X[0].detach().cpu().numpy()
         deformed = x[0].detach().cpu().numpy()
-        plt.xlabel(f"\nDeformation: {func_name} \n eMLE: {error:2.5}")
-        plt.title(f'(Predicted) {energy_predicted.mean():.3} : {energy_true.mean():.3} (True)')
+        plt.xlabel(f"\nPredicted: {energy_predicted.mean():.3} \n True: {energy_true.mean():.3} \n eMLE: {error:2.5}")
+        plt.title(f'Deformation: {func_name}')
         plt.scatter(body[:,0], body[:,1], s=1, c='orange', label='Original')
         plt.scatter(deformed[:,0], deformed[:,1], s=1, c='r', label='Deformed')
         plt.legend()
